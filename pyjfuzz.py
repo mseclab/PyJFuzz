@@ -85,7 +85,7 @@ class JSONFactory:
     def fuzz_array(self, arr, factor):
         actions = {
             0: lambda x, y: x.append(str(y)),
-            1: lambda x, y: x.append(self.radamsa(str(y))),
+            1: lambda x, y: x.append(self.fuzz_string(str(y), factor)),
             2: lambda x, y: x.append(["\\x00", "\\x00", "\\x00", "\\x00"]),
             3: lambda x, y: x.append(dict({})),
             4: lambda x, y: x.append(-1),
