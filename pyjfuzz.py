@@ -52,7 +52,7 @@ class JSONFactory:
             self.__dict__ = {"dummy": "dummy"}
 
     def ffactor(self, factor):
-        if factor not in range(0, 6):
+        if factor not in range(0, 7):
             raise ValueError("Factor must be between 0-6")
         self.fuzz_factor = factor
 
