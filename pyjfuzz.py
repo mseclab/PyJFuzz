@@ -29,7 +29,6 @@ import random
 import string
 import gc
 import urllib
-import ast
 import sys
 import argparse
 
@@ -47,8 +46,10 @@ class JSONFactory:
             self.__dict__ = json.loads(json_obj)
         except TypeError:
             # No others exception should be raised
-            self.__dict__ = {"array": ast.literal_eval(json_obj)}
+            self.__dict__ = json.loads("{\"array\": %s}" % json_obj)
             self.was_array = True
+        except ValueError:
+            self.__dict__ = {"dummy": "dummy"}
 
     def ffactor(self, factor):
         if factor > 6:
@@ -174,7 +175,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Trivial Python JSON Fuzzer (c) DZONERZY')
     parser.add_argument('-j', metavar='JSON', help='Original JSON serialized object', required=True)
     parser.add_argument('-f', metavar='FUZZ_FACTOR', help='Fuzz factor [0-6]', type=int, default=6, required=False)
-    parser.add_argument('-i', metavar='INDENT', help='JSON indent number', type=int, default=4, required=False)
+    parser.add_argument('-i', metavar='INDENT', help='JSON indent number', type=int, default=0, required=False)
     parser.add_argument('-ue', action='store_true', help='URLEncode result', dest='ue', default=False, required=False)
     args = parser.parse_args()
     obj = JSONFactory()
@@ -183,5 +184,8 @@ if __name__ == "__main__":
     if args.ue:
         sys.stdout.write(urllib.quote(json.dumps(obj.fuzz())))
     else:
-        sys.stdout.write(json.dumps(obj.fuzz(), indent=args.i))
+        if args.i == 0:
+            sys.stdout.write(json.dumps(obj.fuzz()))
+        else:
+            sys.stdout.write(json.dumps(obj.fuzz(), indent=args.i))
     gc.collect()
