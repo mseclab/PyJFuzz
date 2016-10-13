@@ -7,6 +7,8 @@ It allows both object based and array based fuzzing, the techniques used are:
  - Object and array fuzzing using above techniques recursively
 
 PyJFuzz simplify the task to fuzz rest API web server since it's a commandline utility and support native urlencode in order to be included inside webapp requests.
+## Dependencies
+- **Radamsa**
 
 ## Usage
 
