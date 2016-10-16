@@ -1,32 +1,27 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""
-PyJFuzz trivial python fuzzer based on radamsa.
-
-
-MIT License
-
-Copyright (c) 2016 Daniele Linguaglossa <danielelinguaglossa@gmail.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-"""
+# ########################## Copyrights and license ############################
+#                                                                              #
+# Copyright 2016 Daniele Linguaglossa <danielelinguaglossa@gmail.com>          #
+#                                                                              #
+# This file is part of PyJFuzz.                                                #
+# http://pygithub.github.io/PyGithub/v1/index.html                             #
+#                                                                              #
+# PyJFuzz is free software: you can redistribute it and/or modify it under     #
+# the terms of the GNU Lesser General Public License as published by the Free  #
+# Software Foundation, either version 3 of the License, or (at your option)    #
+# any later version.                                                           #
+#                                                                              #
+# PyJFuzz is distributed in the hope that it will be useful, but WITHOUT ANY   #
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS    #
+# FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more #
+# details.                                                                     #
+#                                                                              #
+# You should have received a copy of the GNU Lesser General Public License     #
+# along with PyJFuzz. If not, see <http://www.gnu.org/licenses/>.              #
+#                                                                              #
+# ##############################################################################
 
 import subprocess
 import json
@@ -82,13 +77,29 @@ class JSONFactory:
                     elements[element] = self.fuzz_string(elements[element], factor)
                 elif type(elements[element]) == str:
                     elements[element] = self.fuzz_string(elements[element], factor)
+                elif elements[element] is None:
+                    elements[element] = self.fuzz_null(factor)
         del self.__dict__["fuzz_factor"]
         if self.was_array:
             del self.__dict__["was_array"]
             return self.__dict__["array"]
         return self.__dict__
 
+    def fuzz_null(self, factor):
+        self.fuzz_factor = factor
+        actions = {
+            0: None,
+            1: 0,
+            2: False,
+            3: [0],
+            4: {},
+            5: [0],
+            6: {"null": 0}
+        }
+        return actions[random.randint(0, factor)]
+
     def fuzz_array(self, arr, factor):
+        self.fuzz_factor = factor
         actions = {
             0: lambda x, y: x.append(str(y)),
             1: lambda x, y: x.append(self.fuzz_string(str(y), factor)),
@@ -110,11 +121,14 @@ class JSONFactory:
                 arr[arr.index(element)] = self.fuzz_int(element, factor)
             elif type(element) == bool:
                 arr[arr.index(element)] = self.fuzz_bool(element, factor)
+            elif element is None:
+                arr[arr.index(element)] = self.fuzz_null(factor)
             else:
                 arr[arr.index(element)] = choices[random.randint(1, 3)](element)
         return arr
 
     def fuzz_string(self, fuzz_string, factor):
+        self.fuzz_factor = factor
         actions = {
             0: lambda x: self.radamsa(x),
             1: lambda x: x,
@@ -127,6 +141,7 @@ class JSONFactory:
         return actions[random.randint(0, factor)](fuzz_string)
 
     def fuzz_bool(self, boolean, factor):
+        self.fuzz_factor = factor
         actions = {
             0: lambda x: x,
             1: lambda x: not x,
@@ -139,6 +154,7 @@ class JSONFactory:
         return actions[random.randint(0, factor)](boolean)
 
     def fuzz_int(self, num, factor):
+        self.fuzz_factor = factor
         actions = {
             0: lambda x: x | 0xff,
             1: lambda x: x | 0xff000000,
@@ -165,8 +181,14 @@ class JSONFactory:
             4: "'\"><img src=0>",
             5: "||calc.exe;&&id|",
             6: "C:\\..\\",
+            7: "--><img src=0>",
+            8: "\"';]//)}//",
+            9: ".\\",
+            10: "./",
+            11: "{${AAA}}",
+            12: "{{13*37}}",
         }
-        stringa = attacks[random.randint(0, 6)] + stringa
+        stringa = attacks[random.randint(0, 6 + self.fuzz_factor)] + stringa
         p1 = subprocess.Popen(['/bin/echo', stringa], stdout=subprocess.PIPE)
         p2 = subprocess.Popen(["radamsa"], stdin=p1.stdout, stdout=subprocess.PIPE)
         output = p2.communicate()[0]
