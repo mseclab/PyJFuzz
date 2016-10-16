@@ -134,12 +134,12 @@ class JSONFactory:
     def fuzz_string(self, fuzz_string, factor):
         self.fuzz_factor = factor
         actions = {
-            0: lambda x: self.radamsa(x),
-            1: lambda x: x,
-            2: lambda x: [x],
-            3: lambda x: {"param": self.radamsa(x)},
-            4: lambda x: "",
-            5: lambda x: False,
+            0: lambda x: x,
+            1: lambda x: self.radamsa(x),
+            2: lambda x: "",
+            3: lambda x: [x],
+            4: lambda x: False,
+            5: lambda x: {"param": self.radamsa(x)},
             6: lambda x: 0,
         }
         return actions[random.randint(0, factor)](fuzz_string)
@@ -160,13 +160,13 @@ class JSONFactory:
     def fuzz_int(self, num, factor):
         self.fuzz_factor = factor
         actions = {
-            0: lambda x: x | 0xff,
-            1: lambda x: x | 0xff000000,
-            2: lambda x: -x,
-            3: lambda x: x*x,
+            0: lambda x: x,
+            1: lambda x: -x,
+            2: lambda x: x*x,
+            3: lambda x: x | 0xff,
             4: lambda x: random.randint(-2147483647, 2147483647),
             5: lambda x: bool(x),
-            6: lambda x: x
+            6: lambda x: x | 0xff000000
         }
         return actions[random.randint(0, factor)](num)
 
