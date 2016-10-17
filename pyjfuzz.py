@@ -29,7 +29,6 @@ SOFTWARE.
 
 import subprocess
 import json
-import time
 import random
 import string
 import gc
@@ -65,7 +64,7 @@ class JSONFactory:
         return self.fuzz_elements(self.__dict__, self.fuzz_factor)
 
     def fuzz_elements(self, elements, factor):
-        for element in elements:
+        for element in elements.keys():
             if element in ["fuzz_factor", "was_array"]:
                 pass
             else:
@@ -170,7 +169,7 @@ class JSONFactory:
         }
         return actions[random.randint(0, factor)](num)
 
-    def radamsa(self, stringa):
+    def radamsa(self, to_fuzz):
         encodings = {
             0: lambda x: "\\x%02x" % ord(x),
             1: lambda x: urllib.quote(x),
@@ -192,8 +191,8 @@ class JSONFactory:
             11: "{${AAA}}",
             12: "{{13*37}}",
         }
-        stringa = attacks[random.randint(0, 6 + self.fuzz_factor)] + stringa
-        p1 = subprocess.Popen(['/bin/echo', stringa], stdout=subprocess.PIPE)
+        to_fuzz = attacks[random.randint(0, 6 + self.fuzz_factor)] + to_fuzz
+        p1 = subprocess.Popen(['/bin/echo', to_fuzz], stdout=subprocess.PIPE)
         p2 = subprocess.Popen(["radamsa"], stdin=p1.stdout, stdout=subprocess.PIPE)
         output = p2.communicate()[0]
         p1.stdout.close()
@@ -217,7 +216,7 @@ if __name__ == "__main__":
         sys.stdout.write(urllib.quote(json.dumps(obj.fuzz())))
     else:
         if args.i == 0:
-            sys.stdout.write(json.dumps(obj.fuzz()))
+            sys.stdout.write(json.dumps(obj.fuzz(), separators=(',', ':')))
         else:
             sys.stdout.write(json.dumps(obj.fuzz(), indent=args.i))
     gc.collect()
