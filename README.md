@@ -136,16 +136,16 @@ The result should be something similiar
 dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz_as_a_module.py
 [INFO] Using (Radamsa 0.3)
 
-{"test": ["test"], "array": ["{${AAA}}{$AA}}hellollo%250A{${AAA}}hello%250A", 4278190081, "False"], "num": 255}
-{"test": 0, "array": [{"param": ""}, true, true], "num": 15129}
-{"test": "", "array": [false, -385807986, "False"], "num": 255}
-{"test": false, "array": ["", -1, "False"], "num": 123}
-{"test": {"param": "h:///////est&#x0a;htttp://t&#x0a;htp://est&#x0a;http://test&#x0a;"}, "array": [false, 0, true], "num": -2138682966}
-{"test": "test", "array": ["hello", 1.0, true], "num": 4278190203}
-{"test": "htttp:tp://testt&#x0a;", "array": [{"param": "/../../etc/passwdhello\\x0a/../../../etc/passwdhetc/passwdhello\\x0a"}, true, true], "num": 15129}
-{"test": false, "array": [0, "False", true], "num": 632800463}
-{"test": "/../../..\\xf3\\xa0\\x80\\xba/../etc/passwdtest\\x0a", "array": ["'\"><img src=0>helo\\x0a", 4278190081, "True"], "num": -123}
-{"test": "test", "array": ["hello", 4278190081, "False"], "num": 255}
+{"test":"&#4;------<iies&#243;----<iies&#243;&#160;t&#10;","array":["hello",true,true],"num":123}
+{"test":"CCC&#192;&#186;t&#200;].\\&#197;test&#10;","array":[{"param":"sccript"},0,true],"num":-258252615}
+{"test":{"param":"0sdtet%0B"},"array":["&#10;","True",true],"num":-291530801}
+{"test":"test","array":["hello",-1,"True"],"num":255}
+{"test":false,"array":["--><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>hello&#x0a;","False",true],"num":123}
+{"test":{"param":"C:\\..\\te&#xe1;&#x85;&#x9f;st&#x0a;C:\\..\\te&#xe1;&#x85;&#x9f;st&#x0a;C:\\..\\te&#xe1;&#x85;&#x9f;st&#x0a;"},"array":[".\\hello\u000a;.\\hello\u000a;","True",true],"num":255}
+{"test":["test"],"array":[false,-1,true],"num":255}
+{"test":"test","array":["hello","True",true],"num":true}
+{"test":["test"],"array":[{"param":"./helllo%250A"},1,true],"num":-123}
+{"test":{"param":"\"><im'\"><img smg sr'\"><img src=0>tesr'<img src=0>testest\u000a;'\"><img src=0>test\u000a;"},"array":["|$|AAA||${AAAA|$|AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}||$|AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${A|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${ABAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|$|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}}{${ABAA}}h}hello\u000a;{${AAA}}hello\u000a;",1867360077,true],"num":true}
 ```
 ## Bonus!
 This is a small gift for lazy people, below you will find a link to burp-pyjfuzz a Burp Suite plugin which will implement PyJFuzz for fuzzing purpose!
