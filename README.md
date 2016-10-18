@@ -147,8 +147,11 @@ dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz_as_a_module.py
 {"test": "/../../..\\xf3\\xa0\\x80\\xba/../etc/passwdtest\\x0a", "array": ["'\"><img src=0>helo\\x0a", 4278190081, "True"], "num": -123}
 {"test": "test", "array": ["hello", 4278190081, "False"], "num": 255}
 ```
+## Bonus!
+This is a small gift for lazy people, below you will find a link to burp-pyjfuzz, this is a small BurpSuite plugin which will implement PyJFuzz for fuzzing purpose!
 
-## End
+\<coming soon>
+#### End
 As i said before this is a dumb fuzzer anyway you can extend in order to fit your needs, please just remember to mention my name.
 
 \#dzonerzy
