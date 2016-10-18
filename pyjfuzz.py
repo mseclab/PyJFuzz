@@ -218,7 +218,7 @@ class JSONFactory:
             2: "/../../../../etc/passwd",
             3: "'or'1\"or'=\"'1--",
             4: "'\"><img src=0>",
-            5: "||calc.exe;&&id|",
+            5: "||calc.exe&&id||whoami",
             6: "C:\\..\\",
             7: "--><img src=0>",
             8: "\"';]//)}//",
