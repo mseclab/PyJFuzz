@@ -58,6 +58,7 @@ class JSONFactory:
             sys.exit(-1)
 
     def initWithJSON(self, json_obj):
+        fuzz_factor = self.fuzz_factor
         try:
             self.__dict__ = json.loads(json_obj)
         except TypeError:
@@ -65,6 +66,7 @@ class JSONFactory:
             self.was_array = True
         except ValueError:
             self.__dict__ = {"dummy": "dummy"}
+        self.fuzz_factor = fuzz_factor
         self.is_fuzzed = False
 
     def ffactor(self, factor):
