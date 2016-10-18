@@ -74,8 +74,21 @@ class JSONFactory:
             raise ValueError("Factor must be between 0-6")
         self.fuzz_factor = factor
 
-    def fuzz(self):
-        return self.fuzz_elements(self.__dict__, self.fuzz_factor)
+    def _json_dumps(self, obj, indent=0):
+        replacements = {
+            "\\\\x": "\\x",
+            "\\\\u": "\\u",
+        }
+        if bool(indent):
+            obj = json.dumps(obj, indent=indent)
+        else:
+            obj = json.dumps(obj, separators=(',', ':'))
+        for replacement in replacements:
+            obj = obj.replace(replacement, replacements[replacement])
+        return obj
+
+    def fuzz(self, indent=0):
+        return self._json_dumps(self.fuzz_elements(self.__dict__, self.fuzz_factor), indent=indent)
 
     def fuzz_elements(self, elements, factor):
         if self.is_fuzzed:
@@ -196,6 +209,8 @@ class JSONFactory:
             1: lambda x: urllib.quote(x),
             2: lambda x: urllib.quote(urllib.quote(x)),
             3: lambda x: "&#x%02x;" % ord(x),
+            4: lambda x: "\\u00%02x;" % ord(x),
+            5: lambda x: "&#%d;" % ord(x),
         }
         attacks = {
             0: "javascript:alert(0);//",
@@ -220,7 +235,7 @@ class JSONFactory:
         p2.stdout.close()
         del p1
         del p2
-        encode = encodings[random.randint(0, 3)]
+        encode = encodings[random.randint(0, 5)]
         return "".join(encode(x) if x not in string.printable.strip("\t\n\r\x0b\x0c") else x for x in output)
 
 if __name__ == "__main__":
@@ -235,10 +250,10 @@ if __name__ == "__main__":
     obj.initWithJSON(args.j)
     obj.ffactor(args.f)
     if args.ue:
-        sys.stdout.write(urllib.quote(json.dumps(obj.fuzz())))
+        sys.stdout.write(urllib.quote(obj.fuzz()))
     else:
         if args.i == 0:
-            sys.stdout.write(json.dumps(obj.fuzz(), separators=(',', ':')))
+            sys.stdout.write(obj.fuzz())
         else:
-            sys.stdout.write(json.dumps(obj.fuzz(), indent=args.i))
+            sys.stdout.write(obj.fuzz(args.i))
     gc.collect()
