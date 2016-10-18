@@ -150,7 +150,8 @@ dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz_as_a_module.py
 ## Bonus!
 This is a small gift for lazy people, below you will find a link to burp-pyjfuzz, this is a small BurpSuite plugin which will implement PyJFuzz for fuzzing purpose!
 
-\<coming soon>
+[Burp-PyJFuzz](https://github.com/dzonerzy/Burp-PyJFuzz)
+![Burp](https://s15.postimg.org/574yb5c7f/Schermata_2016_10_18_alle_10_39_18.png "Burp Suite Intruder")
 #### End
 As i said before this is a dumb fuzzer anyway you can extend in order to fit your needs, please just remember to mention my name.
 
