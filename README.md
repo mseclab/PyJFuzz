@@ -117,6 +117,36 @@ dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '{"a": 1, "b": "2"}' -f 6 -i 3
    }
 }
 ```
+## Using as a module
+PyJFuzz can be install as a standalone module this will provide you the ability to create your custom program based on PyJFuzz!
+Below an example:
+```python
+from pyjfuzz import JSONFactory
+import json
+
+fuzzer = JSONFactory()
+for _ in range(0, 10):
+    fuzzer.initWithJSON(json.dumps({"test": "test", "num": 123, "array": ["hello", 1, True]}))
+    fuzzer.ffactor(6)
+    print json.dumps(fuzzer.fuzz())
+```
+The result should be something similiar
+
+```
+dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz_as_a_module.py
+[INFO] Using (Radamsa 0.3)
+
+{"test": ["test"], "array": ["{${AAA}}{$AA}}hellollo%250A{${AAA}}hello%250A", 4278190081, "False"], "num": 255}
+{"test": 0, "array": [{"param": ""}, true, true], "num": 15129}
+{"test": "", "array": [false, -385807986, "False"], "num": 255}
+{"test": false, "array": ["", -1, "False"], "num": 123}
+{"test": {"param": "h:///////est&#x0a;htttp://t&#x0a;htp://est&#x0a;http://test&#x0a;"}, "array": [false, 0, true], "num": -2138682966}
+{"test": "test", "array": ["hello", 1.0, true], "num": 4278190203}
+{"test": "htttp:tp://testt&#x0a;", "array": [{"param": "/../../etc/passwdhello\\x0a/../../../etc/passwdhetc/passwdhello\\x0a"}, true, true], "num": 15129}
+{"test": false, "array": [0, "False", true], "num": 632800463}
+{"test": "/../../..\\xf3\\xa0\\x80\\xba/../etc/passwdtest\\x0a", "array": ["'\"><img src=0>helo\\x0a", 4278190081, "True"], "num": -123}
+{"test": "test", "array": ["hello", 4278190081, "False"], "num": 255}
+```
 
 ## End
 As i said before this is a dumb fuzzer anyway you can extend in order to fit your needs, please just remember to mention my name.
