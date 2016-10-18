@@ -44,9 +44,11 @@ __mail__ = "danielelinguaglossa@gmail.com"
 class JSONFactory:
     fuzz_factor = None
     was_array = None
+    is_fuzzed = None
 
     def __init__(self):
         self.fuzz_factor = 0
+        self.is_fuzzed = False
         self.was_array = False
         try:
             ver = subprocess.Popen(["radamsa", "-V"], stdout=subprocess.PIPE).communicate()[0]
@@ -63,6 +65,7 @@ class JSONFactory:
             self.was_array = True
         except ValueError:
             self.__dict__ = {"dummy": "dummy"}
+        self.is_fuzzed = False
 
     def ffactor(self, factor):
         if factor not in range(0, 7):
@@ -73,8 +76,11 @@ class JSONFactory:
         return self.fuzz_elements(self.__dict__, self.fuzz_factor)
 
     def fuzz_elements(self, elements, factor):
+        if self.is_fuzzed:
+            raise ValueError("You cannot fuzz an already fuzzed object please call 'initWithJSON'")
+        self.is_fuzzed = True
         for element in elements.keys():
-            if element in ["fuzz_factor", "was_array"]:
+            if element in ["fuzz_factor", "was_array", "is_fuzzed"]:
                 pass
             else:
                 if type(elements[element]) == dict:
@@ -91,11 +97,13 @@ class JSONFactory:
                     elements[element] = self.fuzz_string(elements[element], factor)
                 elif elements[element] is None:
                     elements[element] = self.fuzz_null(factor)
-        del self.__dict__["fuzz_factor"]
+        result = dict(self.__dict__)
+        del result["fuzz_factor"]
+        del result["is_fuzzed"]
         if self.was_array:
-            del self.__dict__["was_array"]
-            return self.__dict__["array"]
-        return self.__dict__
+            del result["was_array"]
+            return result["array"]
+        return result
 
     def fuzz_null(self, factor):
         self.fuzz_factor = factor
