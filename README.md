@@ -128,7 +128,7 @@ fuzzer = JSONFactory()
 for _ in range(0, 10):
     fuzzer.initWithJSON(json.dumps({"test": "test", "num": 123, "array": ["hello", 1, True]}))
     fuzzer.ffactor(6)
-    print json.dumps(fuzzer.fuzz())
+    print fuzzer.fuzz()
 ```
 The result should be something similiar
 
