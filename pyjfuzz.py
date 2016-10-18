@@ -36,6 +36,10 @@ import urllib
 import sys
 import argparse
 
+__version__ = 0.1
+__author__ = "Daniele 'dzonerzy' Linguaglossa"
+__mail__ = "danielelinguaglossa@gmail.com"
+
 
 class JSONFactory:
     fuzz_factor = None
@@ -44,12 +48,17 @@ class JSONFactory:
     def __init__(self):
         self.fuzz_factor = 0
         self.was_array = False
+        try:
+            ver = subprocess.Popen(["radamsa", "-V"], stdout=subprocess.PIPE).communicate()[0]
+            sys.stderr.write("[INFO] Using ({0})\n\n".format(ver.strip("\n")))
+        except OSError:
+            sys.stderr.write("[ERROR] Radamsa was not found, Please install it!\n\n")
+            sys.exit(-1)
 
     def initWithJSON(self, json_obj):
         try:
             self.__dict__ = json.loads(json_obj)
         except TypeError:
-            # No others exception should be raised
             self.__dict__ = json.loads("{\"array\": %s}" % json_obj)
             self.was_array = True
         except ValueError:
@@ -76,7 +85,7 @@ class JSONFactory:
                     elements[element] = self.fuzz_int(elements[element], factor)
                 elif type(elements[element]) == bool:
                     elements[element] = self.fuzz_bool(elements[element], factor)
-                elif type(elements[element]) == unicode:  # dirty check for python unicode dict
+                elif type(elements[element]) == unicode:
                     elements[element] = self.fuzz_string(elements[element], factor)
                 elif type(elements[element]) == str:
                     elements[element] = self.fuzz_string(elements[element], factor)
@@ -119,6 +128,8 @@ class JSONFactory:
         }
         for element in arr:
             if type(element) == str:
+                arr[arr.index(element)] = self.fuzz_string(element, factor)
+            if type(element) == unicode:
                 arr[arr.index(element)] = self.fuzz_string(element, factor)
             elif type(element) == int:
                 arr[arr.index(element)] = self.fuzz_int(element, factor)
@@ -203,6 +214,7 @@ class JSONFactory:
         return "".join(encode(x) if x not in string.printable.strip("\t\n\r\x0b\x0c") else x for x in output)
 
 if __name__ == "__main__":
+    sys.stderr.write("PyJFuzz v{0} - {1} - {2}\n".format(__version__, __author__, __mail__))
     parser = argparse.ArgumentParser(description='Trivial Python JSON Fuzzer (c) DZONERZY')
     parser.add_argument('-j', metavar='JSON', help='Original JSON serialized object', required=True)
     parser.add_argument('-f', metavar='FUZZ_FACTOR', help='Fuzz factor [0-6]', type=int, default=6, required=False)
