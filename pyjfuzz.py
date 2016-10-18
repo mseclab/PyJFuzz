@@ -93,7 +93,6 @@ class JSONFactory:
     def fuzz_elements(self, elements, factor):
         if self.is_fuzzed:
             raise ValueError("You cannot fuzz an already fuzzed object please call 'initWithJSON'")
-        self.is_fuzzed = True
         for element in elements.keys():
             if element in ["fuzz_factor", "was_array", "is_fuzzed"]:
                 pass
@@ -118,6 +117,7 @@ class JSONFactory:
         if self.was_array:
             del result["was_array"]
             return result["array"]
+        self.is_fuzzed = True
         return result
 
     def fuzz_null(self, factor):
