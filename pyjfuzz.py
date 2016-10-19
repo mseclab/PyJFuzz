@@ -225,7 +225,6 @@ class JSONFactory:
             12: "{{'%s'*7}}",
         }
         attack = attacks[random.randint(0, 12)]
-        print attack
         to_fuzz = attack % to_fuzz
         p1 = subprocess.Popen(['/bin/echo', to_fuzz], stdout=subprocess.PIPE)
         p2 = subprocess.Popen(["radamsa"], stdin=p1.stdout, stdout=subprocess.PIPE)
