@@ -227,7 +227,7 @@ class JSONFactory:
             7: "data:text/html,https://%s:a.it@www.\\it",
             8: "file:///proc/self/%s",
             9: "\\x0d\\xa0BB: %s@mail.it\\x0d\\x0aLocation: www.google.it",
-            10: "./%s",
+            10: "||calc.exe&&id||%s",
             11: "${7*7}a{{%s}}b",
             12: "{{'%s'*7}}",
         }
