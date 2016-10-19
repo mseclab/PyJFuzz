@@ -213,7 +213,7 @@ class JSONFactory:
             5: lambda x: "&#%d;" % ord(x),
         }
         attacks = {
-            0: "jaVasCript:/*-/*\\xe2/*\\\\xe2/*'/*\"/**/(/* */oNcliCk=alert() )//%0D%0A%0d%0a//</stYle/</titLe/</teXtarEa/"
+            0: "jaVasCript:/*-/*\\xe2/*\\\\xe2/*'/*\"/**/(/* */oNcliCk=alert() )//%%0D%%0A%%0d%%0a//</stYle/</titLe/</teXtarEa/"
                "</scRipt/--!>\\x3csVg/<sVg/oNloAd=alert(\%s\)//>\\x3e",
             1: "SELECT 1,2,IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1))/*'XOR(IF(SUBSTR"
                "(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1)))OR'|\"XOR(IF(SUBSTR(@@version,1,1)"
