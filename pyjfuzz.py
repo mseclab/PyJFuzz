@@ -230,7 +230,7 @@ class JSONFactory:
             11: "${7*7}a{{bar}}b",
             12: "{{'7'*7}}",
         }
-        to_fuzz = attacks[random.randint(0, 6 + self.fuzz_factor)] + to_fuzz
+        to_fuzz = attacks[random.randint(0, 12)] + to_fuzz
         p1 = subprocess.Popen(['/bin/echo', to_fuzz], stdout=subprocess.PIPE)
         p2 = subprocess.Popen(["radamsa"], stdin=p1.stdout, stdout=subprocess.PIPE)
         output = p2.communicate()[0]
