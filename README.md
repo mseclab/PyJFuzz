@@ -11,31 +11,8 @@ PyJFuzz simplify the task to fuzz rest API web server since it's a commandline u
 - **Radamsa**
 
 ## Usage
+![CommandLine](https://s17.postimg.org/cc31668a7/Schermata_2016_10_19_alle_14_37_19.png "Command line")
 
-```
-PyJFuzz v0.2 - Daniele 'dzonerzy' Linguaglossa - danielelinguaglossa@gmail.com
-usage: pyjfuzz.py [-h] -j JSON [-p PARAMS] [-t TECHNIQUES] [-f FUZZ_FACTOR]
-                  [-i INDENT] [-ue]
-
-Trivial Python JSON Fuzzer (c) DZONERZY
-
-optional arguments:
-  -h, --help      show this help message and exit
-  -j JSON         Original JSON serialized object
-  -p PARAMS       Parameters comma separated
-  -t TECHNIQUES   Techniques "CHPTSX"
-
-                  C - Command Execution
-                  H - Header Injection
-                  P - Path Traversal
-                  T - Template Injection
-                  S - SQLInjection
-                  X - XSS
-
-  -f FUZZ_FACTOR  Fuzz factor [0-6]
-  -i INDENT       JSON indent number
-  -ue             URLEncode result
-```
 ## Examples
 
 ### Simple object fuzzing
