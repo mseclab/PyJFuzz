@@ -36,7 +36,7 @@ import urllib
 import sys
 import argparse
 
-__version__ = 0.2
+__version__ = 0.1
 __author__ = "Daniele 'dzonerzy' Linguaglossa"
 __mail__ = "danielelinguaglossa@gmail.com"
 
@@ -57,6 +57,12 @@ class JSONFactory:
     tech = []
 
     def __init__(self, techniques=None, params=None):
+        """
+        Init the main class used to fuzz
+        :param techniques: A string indicating the techniques that should be used while fuzzing (all if None)
+        :param params: A list of parametrs to fuzz (all if None)
+        :return: A class object
+        """
         self.params = params.split(",") if params is not None else params
         self.tech = list(techniques) if techniques is not None else []
         self.fuzz_factor = 0
@@ -69,6 +75,11 @@ class JSONFactory:
             raise OSError("Radamsa was not found, Please install it!\n\n")
 
     def initWithJSON(self, json_obj):
+        """
+        Init the class with the base object, let's call this "test-case"
+        :param json_obj: The object needed to initialize the fuzzing process, this is also the base object
+        :return: None
+        """
         fuzz_factor = self.fuzz_factor
         params = self.params
         tech = self.tech
@@ -91,26 +102,49 @@ class JSONFactory:
         self.__dict__.update({"tech": self.tech})
 
     def ffactor(self, factor):
+        """
+        Set the fuzz_factor variable to instruct the fuzzer "how much" to fuzz
+        :param factor: fuzz_factor value
+        :return: None
+        """
         if factor not in range(0, 7):
             raise ValueError("Factor must be between 0-6")
         self.fuzz_factor = factor
 
-    def _json_dumps(self, obj, indent=0):
+    @staticmethod
+    def _json_dumps(json_object, indent=0):
+        """
+        Return the fuzzed object and replace each non-printable character using unicode escape
+        :param json_object: the fuzzed object
+        :param indent: indent if needed
+        :return: fuzzed object with escaped values
+        """
         replacements = {
             "\\\\u": "\\u",
         }
         if bool(indent):
-            obj = json.dumps(obj, indent=indent)
+            json_object = json.dumps(json_object, indent=indent)
         else:
-            obj = json.dumps(obj, separators=(',', ':'))
+            json_object = json.dumps(json_object, separators=(',', ':'))
         for replacement in replacements:
-            obj = obj.replace(replacement, replacements[replacement])
-        return obj
+            json_object = json_object.replace(replacement, replacements[replacement])
+        return json_object
 
     def fuzz(self, indent=0):
+        """
+        Fuzz the object inserted by initWithJSON
+        :param indent: indent if needed
+        :return: String representing the fuzzed object
+        """
         return self._json_dumps(self.fuzz_elements(self.__dict__, self.fuzz_factor), indent=indent)
 
     def fuzz_elements(self, elements, factor):
+        """
+        Fuzz every element specified by elements and self.params (all if None)
+        :param elements: the main base object, self.__dict__ by default
+        :param factor: the fuzz_factor variable used while fuzzing
+        :return: return a object representing the fuzzed JSON object
+        """
         if self.is_fuzzed:
             raise ValueError("You cannot fuzz an already fuzzed object please call 'initWithJSON'")
         for element in elements.keys():
@@ -133,7 +167,7 @@ class JSONFactory:
                     elif type(elements[element]) == str:
                         elements[element] = self.fuzz_string(elements[element], factor)
                     elif elements[element] is None:
-                        elements[element] = self.fuzz_null(factor)
+                        elements[element] = self.fuzz_null(elements[element], factor)
         result = dict(self.__dict__)
         del result["fuzz_factor"]
         del result["is_fuzzed"]
@@ -146,20 +180,32 @@ class JSONFactory:
         self.is_fuzzed = True
         return result
 
-    def fuzz_null(self, factor):
+    def fuzz_null(self, fuzz_null, factor):
+        """
+        Fuzz the null value
+        :param fuzz_null: Original value (None by default)
+        :param factor: The fuzz_factor
+        :return: Fuzzed value
+        """
         self.fuzz_factor = factor
         actions = {
-            0: None,
+            0: lambda x: float('nan'),
             1: 0,
             2: False,
             3: [0],
             4: {},
             5: [0],
-            6: {"null": 0}
+            6: float('-inf')
         }
-        return actions[random.randint(0, factor)]
+        return actions[random.randint(0, factor)](fuzz_null)
 
     def fuzz_array(self, arr, factor):
+        """
+        Fuzz a base array
+        :param arr: original value
+        :param factor: The fuzz_factor
+        :return: Fuzzed array
+        """
         self.fuzz_factor = factor
         actions = {
             0: lambda x, y: x.append(str(y)),
@@ -185,15 +231,21 @@ class JSONFactory:
             elif type(element) == bool:
                 arr[arr.index(element)] = self.fuzz_bool(element, factor)
             elif element is None:
-                arr[arr.index(element)] = self.fuzz_null(factor)
+                arr[arr.index(element)] = self.fuzz_null(element, factor)
             else:
                 arr[arr.index(element)] = choices[random.randint(1, 3)](element)
         return arr
 
     def fuzz_string(self, fuzz_string, factor):
+        """
+        Fuzz a base string
+        :param fuzz_string: Original value
+        :param factor: The fuzz_factor
+        :return: A fuzzed string
+        """
         self.fuzz_factor = factor
         actions = {
-            0: lambda x: x,
+            0: lambda x: x+"A"*100,
             1: lambda x: self.radamsa(x),
             2: lambda x: "",
             3: lambda x: [x],
@@ -204,22 +256,34 @@ class JSONFactory:
         return actions[random.randint(0, factor)](fuzz_string)
 
     def fuzz_bool(self, boolean, factor):
+        """
+        Fuzz a base boolean
+        :param boolean: Original value
+        :param factor: The fuzz_factor
+        :return: A fuzzed boolean
+        """
         self.fuzz_factor = factor
         actions = {
-            0: lambda x: x,
-            1: lambda x: not x,
-            2: lambda x: str(x),
-            3: lambda x: str(not x),
-            4: lambda x: int(x),
-            5: lambda x: int(not x),
-            6: lambda x: float(x),
+            0: lambda x: not x,
+            1: lambda x: str(x),
+            2: lambda x: str(not x),
+            3: lambda x: int(x),
+            4: lambda x: int(not x),
+            5: lambda x: float(x),
+            6: lambda x: float(not x),
         }
         return actions[random.randint(0, factor)](boolean)
 
     def fuzz_int(self, num, factor):
+        """
+        Fuzz a base integer
+        :param num: Original value
+        :param factor: The fuzz_factor
+        :return: A fuzzed integer
+        """
         self.fuzz_factor = factor
         actions = {
-            0: lambda x: x,
+            0: lambda x: x ^ 0xffffff,
             1: lambda x: -x,
             2: lambda x: x*x,
             3: lambda x: x | 0xff,
@@ -230,6 +294,11 @@ class JSONFactory:
         return actions[random.randint(0, factor)](num)
 
     def radamsa(self, to_fuzz):
+        """
+        Fuzz a base string using radamsa fuzzed
+        :param to_fuzz: Original value
+        :return: A fuzzed string
+        """
         encoding = lambda x: "\\u00%02x;" % ord(x)
 
         attacks = {
