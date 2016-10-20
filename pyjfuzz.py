@@ -246,8 +246,7 @@ class JSONFactory:
         """
         self.fuzz_factor = factor
         actions = {
-            0: lambda x: self.radamsa("".join(string.printable.strip("\t\n\r\x0b\x0c")[random.randint(0, 94)]
-                                              for _ in range(0, random.randint(1, 20)))),
+            0: lambda x: x[::-1],
             1: lambda x: self.radamsa(x),
             2: lambda x: "",
             3: lambda x: [x],
@@ -321,7 +320,8 @@ class JSONFactory:
             10: "||cmd.exe&&id||%s",
             11: "${7*7}a{{%s}}b",
             12: "{{'%s'*7}}",
-            13: "%s"
+            13: "".join(string.printable.strip("\t\n\r\x0b\x0c")[random.randint(0, 93)]
+                        for _ in range(0, random.randint(1, 30))).replace("%", "") + "%s"
         }
         if len(self.tech) == 0:
             attack = attacks[random.randint(0, 13)]
