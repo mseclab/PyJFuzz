@@ -245,7 +245,8 @@ class JSONFactory:
         """
         self.fuzz_factor = factor
         actions = {
-            0: lambda x: x+"A"*100,
+            0: lambda x: self.radamsa("".join(string.printable.strip("\t\n\r\x0b\x0c")[random.randint(0, 94)]
+                                              for _ in range(0, random.randint(1, 20)))),
             1: lambda x: self.radamsa(x),
             2: lambda x: "",
             3: lambda x: [x],
