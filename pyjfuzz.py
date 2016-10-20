@@ -51,6 +51,7 @@ class JSONFactory:
         "H": [9],
         "P": [6, 2],
         "T": [11, 12],
+        "R": [13],
         "S": [3, 1],
         "X": [0, 4, 7, 8]
     }
@@ -320,9 +321,10 @@ class JSONFactory:
             10: "||cmd.exe&&id||%s",
             11: "${7*7}a{{%s}}b",
             12: "{{'%s'*7}}",
+            13: "%s"
         }
         if len(self.tech) == 0:
-            attack = attacks[random.randint(0, 12)]
+            attack = attacks[random.randint(0, 13)]
         else:
             attack = attacks[random.choice(self.tech)]
         to_fuzz = attack % to_fuzz
@@ -341,12 +343,13 @@ if __name__ == "__main__":
                                      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-j', metavar='JSON', help='Original JSON serialized object', required=True)
     parser.add_argument('-p', metavar='PARAMS', help='Parameters comma separated', required=False, default=None)
-    parser.add_argument('-t', metavar='TECHNIQUES', help='Techniques "CHPTSX"\n\n'
+    parser.add_argument('-t', metavar='TECHNIQUES', help='Techniques "CHPTRSX"\n\n'
                                                          'C - Command Execution\n'
                                                          'H - Header Injection\n'
                                                          'P - Path Traversal\n'
                                                          'T - Template Injection\n'
-                                                         'S - SQLInjection\n'
+                                                         'R - Random Characters\n'
+                                                         'S - SQL Injection\n'
                                                          'X - XSS\n\n', required=False, default=None)
     parser.add_argument('-f', metavar='FUZZ_FACTOR', help='Fuzz factor [0-6]', type=int, default=6, required=False)
     parser.add_argument('-i', metavar='INDENT', help='JSON indent number', type=int, default=0, required=False)
