@@ -35,7 +35,7 @@ setup(
         name="PyJFuzz",
         version="0.1",
         author="Daniele Lingualossa",
-        author_email="danielelinguaglossa@gmail.com",
+        author_email="d.linguaglossa@mseclab.it",
         description="Trivial JSON fuzzer written in python (based on radamsa)",
         license="MIT",
         keywords="",
