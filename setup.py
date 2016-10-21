@@ -39,7 +39,7 @@ setup(
         description="Trivial JSON fuzzer written in python (based on radamsa)",
         license="MIT",
         keywords="",
-        url="https://github.com/dzonerzy/PyJFuzz",
+        url="https://github.com/mseclab/PyJFuzz",
         py_modules=["pyjfuzz"],
         scripts=["pyjfuzz.py"],
         classifiers=[
