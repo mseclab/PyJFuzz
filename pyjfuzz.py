@@ -38,7 +38,7 @@ import argparse
 
 __version__ = 0.1
 __author__ = "Daniele 'dzonerzy' Linguaglossa"
-__mail__ = "d.linguaglossa@mseclab.it"
+__mail__ = "d.linguaglossa@mseclab.com"
 
 
 class JSONFactory:
