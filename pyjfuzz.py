@@ -313,6 +313,11 @@ class JSONFactory:
         return actions[random.randint(0, factor)](num)
 
     def clean_result(self, result):
+        """
+        Clean the fuzzed object from useless properties
+        :param result: The fuzzed object
+        :return: Fuzzed object
+        """
         del result["fuzz_factor"]
         del result["is_fuzzed"]
         del result["params"]
@@ -324,12 +329,22 @@ class JSONFactory:
         return result
 
     def is_behavior_fuzz(self, kind):
+        """
+        Check if element of "kind" should be fuzzed due to behavior weight
+        :param kind: Type of analyzed element
+        :return: True or False
+        """
         if self.behavior_based:
             return 0 <= random.randint(1, 10) <= self.behavior[kind]
         else:
             return True
 
     def sensible_behavior(self, kind):
+        """
+        Add a weight to a type due to strange behavior
+        :param kind: Type of analyzed element
+        :return: None
+        """
         for _kind in self.behavior.keys():
             if _kind != kind:
                 if self.behavior[_kind]-0.1 >= 1:
@@ -338,6 +353,11 @@ class JSONFactory:
                     self.behavior[_kind] = 0
 
     def fuzz_behavior(self, kind):
+        """
+        Calculate a new fuzz_factor based on behavior weight
+        :param kind: Type of analyzed element
+        :return: New fuzz_factor value
+        """
         if self.behavior_based:
             if self.behavior[kind] == 10:
                 return self.fuzz_factor
