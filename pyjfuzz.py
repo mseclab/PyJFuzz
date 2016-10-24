@@ -6,7 +6,7 @@ PyJFuzz trivial python fuzzer based on radamsa.
 
 MIT License
 
-Copyright (c) 2016 Daniele Linguaglossa <d.linguaglossa@mseclab.it>
+Copyright (c) 2016 Daniele Linguaglossa <danielelinguaglossa@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -190,7 +190,7 @@ class JSONFactory:
         """
         self.fuzz_factor = factor
         actions = {
-            0: lambda x: float('nan'),
+            0: float('nan'),
             1: 0,
             2: False,
             3: [0],
@@ -198,7 +198,7 @@ class JSONFactory:
             5: [0],
             6: float('-inf')
         }
-        return actions[random.randint(0, factor)](fuzz_null)
+        return actions[random.randint(0, factor)]
 
     def fuzz_array(self, arr, factor):
         """
@@ -208,21 +208,8 @@ class JSONFactory:
         :return: Fuzzed array
         """
         self.fuzz_factor = factor
-        actions = {
-            0: lambda x, y: x.append(str(y)),
-            1: lambda x, y: x.append(self.fuzz_string(str(y), factor)),
-            2: lambda x, y: x.append(["\\u0000", "\\u0000", "\\u0000", "\\u0000"]),
-            3: lambda x, y: x.append(dict({})),
-            4: lambda x, y: x.append(-1),
-            5: lambda x, y: x.append(dict({self.fuzz_string("AAA", 0): [-1]})),
-            6: lambda x, y: x.append(False)
-        }
-        choices = {
-            1: lambda x: actions[random.randint(0, factor)](arr, arr.index(x)),
-            2: lambda x: self.fuzz_string(str(arr[arr.index(x)]), factor),
-            3: lambda x: x
-        }
-        for element in arr:
+        tmp_arr = list(arr)
+        for element in tmp_arr:
             if type(element) == str:
                 arr[arr.index(element)] = self.fuzz_string(element, factor)
             if type(element) == unicode:
@@ -233,8 +220,14 @@ class JSONFactory:
                 arr[arr.index(element)] = self.fuzz_bool(element, factor)
             elif element is None:
                 arr[arr.index(element)] = self.fuzz_null(element, factor)
-            else:
-                arr[arr.index(element)] = choices[random.randint(1, 3)](element)
+            elif type(element) == list:
+                print element
+                arr[arr.index(element)] = self.fuzz_array(element, factor)
+            elif type(element) == dict:
+                tmp_fuzz = JSONFactory(techniques=self.techniques, params=self.params)
+                tmp_fuzz.initWithJSON(json.dumps(element))
+                tmp_fuzz.ffactor(self.fuzz_factor)
+                arr[arr.index(element)] = json.loads(tmp_fuzz.fuzz())
         return arr
 
     def fuzz_string(self, fuzz_string, factor):
