@@ -180,6 +180,51 @@ dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz_as_a_module.py
 {"test":["test"],"array":[{"param":"./helllo%250A"},1,true],"num":-123}
 {"test":{"param":"\"><im'\"><img smg sr'\"><img src=0>tesr'<img src=0>testest\u000a;'\"><img src=0>test\u000a;"},"array":["|$|AAA||${AAAA|$|AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}||$|AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${A|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${ABAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|$|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}}{${ABAA}}h}hello\u000a;{${AAA}}hello\u000a;",1867360077,true],"num":true}
 ```
+## Behavior based fuzzing
+PyJFuzz support also behavior-based fuzzing via **\*_beheavior** API, logic must be implemented by the users and PyJFuzz will do calculations for you!
+Below an example of behavior-based Fuzzing:
+```python
+from pyjfuzz import JSONFactory
+import json
+
+fuzzer = JSONFactory(behavior_based=True)
+fuzzer.ffactor(6)  # start with the highest fuzz_factor
+for _ in range(0, 1000):
+    try:
+        fuzzer.initWithJSON(json.dumps({"user": "admin", "logged": True, "privs": 1}))
+        fuzzed = fuzzer.fuzz()  # generate a fuzzed object
+        print fuzzed
+        fuzzed = json.loads(fuzzed)  # parse the fuzzed object
+        try:
+            if fuzzed["privs"] > 10:
+                raise Exception  # simulate Error
+        except:
+            fuzzer.sensible_behavior(int)  # and increment the sensible counter for integer types
+    except:
+        fuzzer.sensible_behavior(str)  # caught Error while decoding invalid bytes and increment str sensible counter
+    print fuzzer.behavior  # print the actual behavior state
+```
+the result should be something similiar
+```
+{"privs":-1,"logged":1,"user":["admin"]}
+{<type 'unicode'>: 10, <type 'int'>: 10, <type 'bool'>: 10, <type 'str'>: 10, None: 10}
+{"privs":-1,"logged":1.0,"user":"nimda"}
+{<type 'unicode'>: 10, <type 'int'>: 10, <type 'bool'>: 10, <type 'str'>: 10, None: 10}
+....
+....
+{"privs":1158212726,"logged":true,"user":"nimda"}
+{<type 'unicode'>: 5.100000000000017, <type 'int'>: 10, <type 'bool'>: 5.100000000000017, <type 'str'>: 5.100000000000017, None: 5.100000000000017}
+{"privs":-1,"logged":true,"user":["admin"]}
+{<type 'unicode'>: 5.100000000000017, <type 'int'>: 10, <type 'bool'>: 5.100000000000017, <type 'str'>: 5.100000000000017, None: 5.100000000000017}
+....
+....
+{"privs":-1404775343,"logged":true,"user":"admin"}
+{<type 'unicode'>: 0, <type 'int'>: 10, <type 'bool'>: 0, <type 'str'>: 0, None: 0}
+{"privs":true,"logged":true,"user":"admin"}
+{<type 'unicode'>: 0, <type 'int'>: 10, <type 'bool'>: 0, <type 'str'>: 0, None: 0}
+```
+It will start fuzzing all elements and finish fuzzing the only element which cause strange behavior.
+
 ## Bonus!
 This is a small gift for lazy people, below you will find a link to burp-pyjfuzz a Burp Suite plugin which will implement PyJFuzz for fuzzing purpose!
 
