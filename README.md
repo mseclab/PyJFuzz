@@ -150,6 +150,32 @@ PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.it
 
 {"a"‮:󠁝� �� 0}
 ```
+## Random character fuzzing
+PyJFuzz can even do really dump fuzzing using random character, this is not the best option anyway could lead to strange behavior
+
+```
+dzonerzy:jsonfuzz dzonerzy$ pyjfuzz.py -j '["test"]' -t R -f 1 -i 5
+PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.com
+[INFO] Using (Radamsa 0.5)
+
+[
+     "g[~VL?uzkk{D;rAz1e,i{*4test\u000a;"
+]
+dzonerzy:jsonfuzz dzonerzy$ pyjfuzz.py -j '["test"]' -t R -f 1 -i 5
+PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.com
+[INFO] Using (Radamsa 0.5)
+
+[
+     "'0`'e-&:8S:>4T(L`Q~i|@ir\";-9223372036854775809lMtest\u000a;"
+]
+dzonerzy:jsonfuzz dzonerzy$ pyjfuzz.py -j '["test"]' -t R -f 1 -i 5
+PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.com
+[INFO] Using (Radamsa 0.5)
+
+[
+     "'}bu+#-18446744073709551616pdltest\u000a;"
+]
+```
 ## Using as a module
 PyJFuzz can be install as a standalone module this will provide you the ability to create your custom program based on PyJFuzz!
 Below an example:
