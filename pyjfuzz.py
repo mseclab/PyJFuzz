@@ -353,6 +353,11 @@ class JSONFactory:
                     self.behavior[_kind] -= 0.1
                 else:
                     self.behavior[_kind] = 0
+            else:
+                if self.behavior[_kind]+0.1 <= 10:
+                    self.behavior[_kind] += 0.1
+                else:
+                    self.behavior[_kind] = 10
 
     def fuzz_behavior(self, kind):
         """
