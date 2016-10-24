@@ -26,7 +26,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-
 import subprocess
 import json
 import random
@@ -66,7 +65,7 @@ class JSONFactory:
     behavior_based = False
     tech = []
 
-    def __init__(self, techniques=None, params=None, strong_fuzz=False, behavior_based=False):
+    def __init__(self, techniques=None, params=None, strong_fuzz=False, behavior_based=False, debug=False):
         """
         Init the main class used to fuzz
         :param techniques: A string indicating the techniques that should be used while fuzzing (all if None)
@@ -82,7 +81,10 @@ class JSONFactory:
         self.was_array = False
         try:
             ver = subprocess.Popen(["radamsa", "-V"], stdout=subprocess.PIPE).communicate()[0]
-            sys.stderr.write("[INFO] Using ({0})\n\n".format(ver.strip("\n")))
+            if debug:
+                sys.stderr.write("[DEBUG] PyJFuzz version ({0})\n".format(__version__))
+                sys.stderr.write("[DEBUG] Using ({0})\n".format(ver.strip("\n")))
+                sys.stderr.write("[DEBUG] Arguments ({0})\n\n".format(str(self.__dict__)))
         except OSError:
             raise OSError("Radamsa was not found, Please install it!\n\n")
 
@@ -372,13 +374,11 @@ class JSONFactory:
         :param to_fuzz: Original value
         :return: A fuzzed string
         """
-        p1 = subprocess.Popen(['/bin/echo', to_fuzz], stdout=subprocess.PIPE)
-        p2 = subprocess.Popen(["radamsa"], stdin=p1.stdout, stdout=subprocess.PIPE)
-        output = p2.communicate()[0]
-        p1.stdout.close()
-        p2.stdout.close()
-        del p1
-        del p2
+        process = subprocess.Popen(["radamsa"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        process.stdin.write(to_fuzz)
+        output = process.communicate()[0]
+        process.stdout.close()
+        del process
         return "".join(x if x not in string.printable.strip("\t\n\r\x0b\x0c") else x for x in output)
 
     def radamsa(self, to_fuzz):
@@ -387,6 +387,7 @@ class JSONFactory:
         :param to_fuzz: Original value
         :return: A fuzzed string
         """
+
         encoding = lambda x: "\\u00%02x;" % ord(x)
 
         attacks = {
@@ -415,13 +416,11 @@ class JSONFactory:
         else:
             attack = attacks[random.choice(self.tech)]
         to_fuzz = attack % to_fuzz
-        p1 = subprocess.Popen(['/bin/echo', to_fuzz], stdout=subprocess.PIPE)
-        p2 = subprocess.Popen(["radamsa"], stdin=p1.stdout, stdout=subprocess.PIPE)
-        output = p2.communicate()[0]
-        p1.stdout.close()
-        p2.stdout.close()
-        del p1
-        del p2
+        process = subprocess.Popen(["radamsa"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        process.stdin.write(to_fuzz)
+        output = process.communicate()[0]
+        process.stdout.close()
+        del process
         return "".join(encoding(x) if x not in string.printable.strip("\t\n\r\x0b\x0c") else x for x in output)
 
 if __name__ == "__main__":
