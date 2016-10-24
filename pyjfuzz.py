@@ -72,6 +72,10 @@ class JSONFactory:
         :param params: A list of parametrs to fuzz (all if None)
         :return: A class object
         """
+        if behavior_based and (techniques is not None or params is not None or strong_fuzz is not False):
+            raise EnvironmentError("No other options must be specified while using behavior-based fuzzing!\n\n")
+        if strong_fuzz and (techniques is not None or params is not None or behavior_based is not False):
+            raise EnvironmentError("No other options must be specified while using strong fuzzing!\n\n")
         self.behavior_based = behavior_based
         self.strong_fuzz = strong_fuzz
         self.params = params.split(",") if params is not None else params
