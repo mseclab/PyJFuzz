@@ -56,15 +56,24 @@ class JSONFactory:
         "S": [3, 1],
         "X": [0, 4, 7, 8]
     }
+    behavior = {
+        int: 10,
+        bool: 10,
+        str: 10,
+        unicode: 10,
+        None: 10,
+    }
+    behavior_based = False
     tech = []
 
-    def __init__(self, techniques=None, params=None, strong_fuzz=False):
+    def __init__(self, techniques=None, params=None, strong_fuzz=False, behavior_based=False):
         """
         Init the main class used to fuzz
         :param techniques: A string indicating the techniques that should be used while fuzzing (all if None)
         :param params: A list of parametrs to fuzz (all if None)
         :return: A class object
         """
+        self.behavior_based = behavior_based
         self.strong_fuzz = strong_fuzz
         self.params = params.split(",") if params is not None else params
         self.tech = list(techniques) if techniques is not None else []
@@ -88,6 +97,8 @@ class JSONFactory:
         tech = self.tech
         techniques = self.techniques
         strong_fuzz = self.strong_fuzz
+        behavior_based = self.behavior_based
+        behavior = self.behavior
         try:
             self.__dict__ = json.loads(json_obj)
         except TypeError:
@@ -100,6 +111,8 @@ class JSONFactory:
         self.is_fuzzed = False
         self.techniques = techniques
         self.strong_fuzz = strong_fuzz
+        self.behavior = behavior
+        self.behavior_based = behavior_based
         if len(tech) != 0:
             for t in tech:
                 if t in self.techniques.keys():
@@ -155,19 +168,14 @@ class JSONFactory:
         if self.is_fuzzed:
             raise ValueError("You cannot fuzz an already fuzzed object please call 'initWithJSON'")
         if self.strong_fuzz:
-            result = dict(self.__dict__)
-            del result["fuzz_factor"]
-            del result["is_fuzzed"]
-            del result["params"]
-            del result["techniques"]
-            del result["tech"]
-            del result["strong_fuzz"]
+            result = self.clean_result(dict(self.__dict__))
             if self.was_array:
                 return self._radamsa(json.dumps(result["array"]))
             return self._radamsa(json.dumps(result))
         else:
             for element in elements.keys():
-                if element in ["fuzz_factor", "was_array", "is_fuzzed", "params", "techniques", "tech"]:
+                if element in ["fuzz_factor", "was_array", "is_fuzzed", "params", "techniques", "tech", "strong_fuzz",
+                               "behavior", "behavior_based"]:
                     pass
                 else:
                     if self.params is not None and element not in self.params:
@@ -178,24 +186,22 @@ class JSONFactory:
                         elif type(elements[element]) == list:
                             elements[element] = self.fuzz_array(elements[element], factor)
                         elif type(elements[element]) == int:
-                            elements[element] = self.fuzz_int(elements[element], factor)
+                            if self.is_behavior_fuzz(int):
+                                elements[element] = self.fuzz_int(elements[element], self.fuzz_behavior(int))
                         elif type(elements[element]) == bool:
-                            elements[element] = self.fuzz_bool(elements[element], factor)
+                            if self.is_behavior_fuzz(bool):
+                                elements[element] = self.fuzz_bool(elements[element], self.fuzz_behavior(bool))
                         elif type(elements[element]) == unicode:
-                            elements[element] = self.fuzz_string(elements[element], factor)
+                            if self.is_behavior_fuzz(unicode):
+                                elements[element] = self.fuzz_string(elements[element], self.fuzz_behavior(unicode))
                         elif type(elements[element]) == str:
-                            elements[element] = self.fuzz_string(elements[element], factor)
+                            if self.is_behavior_fuzz(str):
+                                elements[element] = self.fuzz_string(elements[element], self.fuzz_behavior(str))
                         elif elements[element] is None:
-                            elements[element] = self.fuzz_null(elements[element], factor)
-            result = dict(self.__dict__)
-            del result["fuzz_factor"]
-            del result["is_fuzzed"]
-            del result["params"]
-            del result["techniques"]
-            del result["tech"]
-            del result["strong_fuzz"]
+                            if self.is_behavior_fuzz(None):
+                                elements[element] = self.fuzz_null(elements[element], self.fuzz_behavior(None))
+            result = self.clean_result(dict(self.__dict__))
             if self.was_array:
-                del result["was_array"]
                 return result["array"]
             self.is_fuzzed = True
             return result
@@ -207,7 +213,6 @@ class JSONFactory:
         :param factor: The fuzz_factor
         :return: Fuzzed value
         """
-        self.fuzz_factor = factor
         actions = {
             0: lambda x: float('nan'),
             1: lambda x: int(bool(x)),
@@ -226,24 +231,28 @@ class JSONFactory:
         :param factor: The fuzz_factor
         :return: Fuzzed array
         """
-        self.fuzz_factor = factor
         tmp_arr = list(arr)
         for element in tmp_arr:
             if type(element) == str:
-                arr[arr.index(element)] = self.fuzz_string(element, factor)
+                if self.is_behavior_fuzz(str):
+                    arr[arr.index(element)] = self.fuzz_string(element, self.fuzz_behavior(str))
             if type(element) == unicode:
-                arr[arr.index(element)] = self.fuzz_string(element, factor)
+                if self.is_behavior_fuzz(unicode):
+                    arr[arr.index(element)] = self.fuzz_string(element, self.fuzz_behavior(unicode))
             elif type(element) == int:
-                arr[arr.index(element)] = self.fuzz_int(element, factor)
+                if self.is_behavior_fuzz(int):
+                    arr[arr.index(element)] = self.fuzz_int(element, self.fuzz_behavior(int))
             elif type(element) == bool:
-                arr[arr.index(element)] = self.fuzz_bool(element, factor)
+                if self.is_behavior_fuzz(bool):
+                    arr[arr.index(element)] = self.fuzz_bool(element, self.fuzz_behavior(bool))
             elif element is None:
-                arr[arr.index(element)] = self.fuzz_null(element, factor)
+                if self.is_behavior_fuzz(None):
+                    arr[arr.index(element)] = self.fuzz_null(element, self.fuzz_behavior(None))
             elif type(element) == list:
-                print element
                 arr[arr.index(element)] = self.fuzz_array(element, factor)
             elif type(element) == dict:
-                tmp_fuzz = JSONFactory(techniques=self.techniques, params=self.params)
+                tmp_fuzz = JSONFactory(techniques=self.techniques, params=self.params,
+                                       behavior_based=self.behavior_based)
                 tmp_fuzz.initWithJSON(json.dumps(element))
                 tmp_fuzz.ffactor(self.fuzz_factor)
                 arr[arr.index(element)] = json.loads(tmp_fuzz.fuzz())
@@ -256,7 +265,6 @@ class JSONFactory:
         :param factor: The fuzz_factor
         :return: A fuzzed string
         """
-        self.fuzz_factor = factor
         actions = {
             0: lambda x: x[::-1],
             1: lambda x: self.radamsa(x),
@@ -275,7 +283,6 @@ class JSONFactory:
         :param factor: The fuzz_factor
         :return: A fuzzed boolean
         """
-        self.fuzz_factor = factor
         actions = {
             0: lambda x: not x,
             1: lambda x: str(x),
@@ -294,7 +301,6 @@ class JSONFactory:
         :param factor: The fuzz_factor
         :return: A fuzzed integer
         """
-        self.fuzz_factor = factor
         actions = {
             0: lambda x: x ^ 0xffffff,
             1: lambda x: -x,
@@ -306,7 +312,46 @@ class JSONFactory:
         }
         return actions[random.randint(0, factor)](num)
 
+    def clean_result(self, result):
+        del result["fuzz_factor"]
+        del result["is_fuzzed"]
+        del result["params"]
+        del result["techniques"]
+        del result["tech"]
+        del result["strong_fuzz"]
+        del result["behavior"]
+        del result["behavior_based"]
+        return result
+
+    def is_behavior_fuzz(self, kind):
+        if self.behavior_based:
+            return 0 <= random.randint(1, 10) <= self.behavior[kind]
+        else:
+            return True
+
+    def sensible_behavior(self, kind):
+        for _kind in self.behavior.keys():
+            if _kind != kind:
+                if self.behavior[_kind]-0.1 >= 1:
+                    self.behavior[_kind] -= 0.1
+                else:
+                    self.behavior[_kind] = 0
+
+    def fuzz_behavior(self, kind):
+        if self.behavior_based:
+            if self.behavior[kind] == 10:
+                return self.fuzz_factor
+            else:
+                return int((6 * self.behavior[kind]) / 10)
+        else:
+            return self.fuzz_factor
+
     def _radamsa(self, to_fuzz):
+        """
+        Fuzz a base string using radamsa fuzzed
+        :param to_fuzz: Original value
+        :return: A fuzzed string
+        """
         p1 = subprocess.Popen(['/bin/echo', to_fuzz], stdout=subprocess.PIPE)
         p2 = subprocess.Popen(["radamsa"], stdin=p1.stdout, stdout=subprocess.PIPE)
         output = p2.communicate()[0]
