@@ -34,6 +34,7 @@ import gc
 import urllib
 import sys
 import argparse
+import time
 
 __version__ = 0.1
 __author__ = "Daniele 'dzonerzy' Linguaglossa"
@@ -61,11 +62,15 @@ class JSONFactory:
         str: 10,
         unicode: 10,
         None: 10,
+        float: 10,
     }
     behavior_based = False
     tech = []
+    debug = False
+    exclude = False
 
-    def __init__(self, techniques=None, params=None, strong_fuzz=False, behavior_based=False, debug=False):
+    def __init__(self, techniques=None, params=None, strong_fuzz=False, behavior_based=False, debug=False,
+                 exclude=False):
         """
         Init the main class used to fuzz
         :param techniques: A string indicating the techniques that should be used while fuzzing (all if None)
@@ -83,12 +88,14 @@ class JSONFactory:
         self.fuzz_factor = 0
         self.is_fuzzed = False
         self.was_array = False
+        self.debug = debug
+        self.exclude = exclude
         try:
             ver = subprocess.Popen(["radamsa", "-V"], stdout=subprocess.PIPE).communicate()[0]
             if debug:
                 sys.stderr.write("[DEBUG] PyJFuzz version ({0})\n".format(__version__))
                 sys.stderr.write("[DEBUG] Using ({0})\n".format(ver.strip("\n")))
-                sys.stderr.write("[DEBUG] Arguments ({0})\n\n".format(str(self.__dict__)))
+                sys.stderr.write("[DEBUG] Arguments ({0})\n".format(self.repr(self.__dict__)))
         except OSError:
             raise OSError("Radamsa was not found, Please install it!\n\n")
 
@@ -105,6 +112,8 @@ class JSONFactory:
         strong_fuzz = self.strong_fuzz
         behavior_based = self.behavior_based
         behavior = self.behavior
+        debug = self.debug
+        exclude = self.exclude
         try:
             self.__dict__ = json.loads(json_obj)
         except TypeError:
@@ -119,6 +128,8 @@ class JSONFactory:
         self.strong_fuzz = strong_fuzz
         self.behavior = behavior
         self.behavior_based = behavior_based
+        self.debug = debug
+        self.exclude = exclude
         if len(tech) != 0:
             for t in tech:
                 if t in self.techniques.keys():
@@ -133,6 +144,8 @@ class JSONFactory:
         """
         if factor not in range(0, 7):
             raise ValueError("Factor must be between 0-6")
+        if self.debug:
+            sys.stderr.write("[DEBUG] Setting Fuzz factor to ({0})\n".format(factor))
         self.fuzz_factor = factor
 
     @staticmethod
@@ -160,9 +173,11 @@ class JSONFactory:
         :param indent: indent if needed
         :return: String representing the fuzzed object
         """
+        start_time = time.time()
         if self.strong_fuzz:
-            return self.fuzz_elements(self.__dict__, self.fuzz_factor)
-        return self._json_dumps(self.fuzz_elements(self.__dict__, self.fuzz_factor), indent=indent)
+            return self.statistics(start_time, self.fuzz_elements(self.__dict__, self.fuzz_factor), debug=self.debug)
+        return self.statistics(start_time, self._json_dumps(
+            self.fuzz_elements(self.__dict__, self.fuzz_factor), indent=indent), debug=self.debug)
 
     def fuzz_elements(self, elements, factor):
         """
@@ -171,6 +186,8 @@ class JSONFactory:
         :param factor: the fuzz_factor variable used while fuzzing
         :return: return a object representing the fuzzed JSON object
         """
+        if self.debug:
+            sys.stderr.write("[DEBUG] Start fuzzing process\n")
         if self.is_fuzzed:
             raise ValueError("You cannot fuzz an already fuzzed object please call 'initWithJSON'")
         if self.strong_fuzz:
@@ -181,10 +198,10 @@ class JSONFactory:
         else:
             for element in elements.keys():
                 if element in ["fuzz_factor", "was_array", "is_fuzzed", "params", "techniques", "tech", "strong_fuzz",
-                               "behavior", "behavior_based"]:
+                               "behavior", "behavior_based", "debug", "exclude"]:
                     pass
                 else:
-                    if self.params is not None and element not in self.params:
+                    if self.params is not None and self.check_params(element):
                         pass
                     else:
                         if type(elements[element]) == dict:
@@ -194,6 +211,9 @@ class JSONFactory:
                         elif type(elements[element]) == int:
                             if self.is_behavior_fuzz(int):
                                 elements[element] = self.fuzz_int(elements[element], self.fuzz_behavior(int))
+                        elif type(elements[element]) == float:
+                            if self.is_behavior_fuzz(float):
+                                elements[element] = self.fuzz_float(elements[element], self.fuzz_behavior(float))
                         elif type(elements[element]) == bool:
                             if self.is_behavior_fuzz(bool):
                                 elements[element] = self.fuzz_bool(elements[element], self.fuzz_behavior(bool))
@@ -248,6 +268,9 @@ class JSONFactory:
             elif type(element) == int:
                 if self.is_behavior_fuzz(int):
                     arr[arr.index(element)] = self.fuzz_int(element, self.fuzz_behavior(int))
+            elif type(element) == float:
+                if self.is_behavior_fuzz(float):
+                    arr[arr.index(element)] = self.fuzz_float(element, self.fuzz_behavior(float))
             elif type(element) == bool:
                 if self.is_behavior_fuzz(bool):
                     arr[arr.index(element)] = self.fuzz_bool(element, self.fuzz_behavior(bool))
@@ -310,11 +333,29 @@ class JSONFactory:
         actions = {
             0: lambda x: x ^ 0xffffff,
             1: lambda x: -x,
-            2: lambda x: x*x,
+            2: lambda x: "%s" % x,
             3: lambda x: x | 0xff,
             4: lambda x: random.randint(-2147483647, 2147483647),
             5: lambda x: bool(x),
             6: lambda x: x | 0xff000000
+        }
+        return actions[random.randint(0, factor)](num)
+
+    def fuzz_float(self, num, factor):
+        """
+        Fuzz a base float
+        :param num: Original value
+        :param factor: The fuzz_factor
+        :return: A fuzzed float
+        """
+        actions = {
+            0: lambda x: float(int(round(x, 0)) ^ 0xffffff),
+            1: lambda x: -x,
+            2: lambda x: "%s" % x,
+            3: lambda x: float(int(round(x, 0)) | 0xff),
+            4: lambda x: float(random.randint(-2147483647, 2147483647)*0.1),
+            5: lambda x: bool(round(x, 0)),
+            6: lambda x: float(int(round(x, 0)) | 0xff000000)
         }
         return actions[random.randint(0, factor)](num)
 
@@ -332,6 +373,8 @@ class JSONFactory:
         del result["strong_fuzz"]
         del result["behavior"]
         del result["behavior_based"]
+        del result["debug"]
+        del result["exclude"]
         return result
 
     def is_behavior_fuzz(self, kind):
@@ -345,7 +388,7 @@ class JSONFactory:
         else:
             return True
 
-    def sensible_behavior(self, kind):
+    def sensible_behavior(self, kind, plus_factor=0.1, minus_factor=0.1):
         """
         Add a weight to a type due to strange behavior
         :param kind: Type of analyzed element
@@ -353,13 +396,13 @@ class JSONFactory:
         """
         for _kind in self.behavior.keys():
             if _kind != kind:
-                if self.behavior[_kind]-0.1 >= 1:
-                    self.behavior[_kind] -= 0.1
+                if self.behavior[_kind]-minus_factor >= 1:
+                    self.behavior[_kind] -= minus_factor
                 else:
                     self.behavior[_kind] = 0
             else:
-                if self.behavior[_kind]+0.1 <= 10:
-                    self.behavior[_kind] += 0.1
+                if self.behavior[_kind]+plus_factor <= 10:
+                    self.behavior[_kind] += plus_factor
                 else:
                     self.behavior[_kind] = 10
 
@@ -376,6 +419,17 @@ class JSONFactory:
                 return int((6 * self.behavior[kind]) / 10)
         else:
             return self.fuzz_factor
+
+    def check_params(self, element):
+        """
+        Check against parameters from -p switch if element should be fuzzed,
+        :param element: current parameter
+        :return: True or False
+        """
+        if self.exclude:
+            return element in self.params
+        else:
+            return element not in self.params
 
     def _radamsa(self, to_fuzz):
         """
@@ -400,8 +454,8 @@ class JSONFactory:
         encoding = lambda x: "\\u00%02x;" % ord(x)
 
         attacks = {
-            0: "jaVasCript:/*-/*\\u0060/*\\\\u0060/*'/*\"/**/(/* */oNcliCk=alert() )//%%0D%%0A%%0d%%0a//</stYle/</titLe/</teXtarEa/"
-               "</scRipt/--!>\\u003csVg/<sVg/oNloAd=alert(\%s\)//>\\u003e",
+            0: "jaVasCript:/*-/*\\u0060/*\\\\u0060/*'/*\"/**/(/* */oNcliCk=alert() )//%%0D%%0A%%0d%%0a//</stYle/</tit"
+               "Le/</teXtarEa/</scRipt/--!>\\u003csVg/<sVg/oNloAd=alert(\%s\)//>\\u003e",
             1: "SELECT 1,2,IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1))/*'XOR(IF(SUBSTR"
                "(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1)))OR'|\"XOR(IF(SUBSTR(@@version,1,1)"
                "<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1)))OR\"*/ FROM some_table WHERE ex = %s",
@@ -424,7 +478,7 @@ class JSONFactory:
             attack = attacks[random.randint(0, 13)]
         else:
             attack = attacks[random.choice(self.tech)]
-        to_fuzz = attack % to_fuzz
+        to_fuzz = attack % "".join(encoding(x) for x in to_fuzz)
         process = subprocess.Popen(["radamsa"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         process.stdin.write(to_fuzz)
         output = process.communicate()[0]
@@ -432,11 +486,24 @@ class JSONFactory:
         del process
         return "".join(encoding(x) if x not in string.printable.strip("\t\n\r\x0b\x0c") else x for x in output)
 
+    def statistics(self, start, result, debug=False):
+        if debug:
+            sys.stderr.write("[DEBUG] Fuzzing completed took ({0} sec)\n\n".format(round(time.time()-start, 4)))
+        return result
+
+    def repr(self, properties):
+        representation = "\n"
+        for element in properties.keys():
+            representation += "%s => %s\n" % (element, properties[element])
+        return representation
+
 if __name__ == "__main__":
-    sys.stderr.write("PyJFuzz v{0} - {1} - {2}\n".format(__version__, __author__, __mail__))
+    sys.stderr.write("PyJFuzz v{0} - {1} - {2}\n\n".format(__version__, __author__, __mail__))
     parser = argparse.ArgumentParser(description='Trivial Python JSON Fuzzer (c) DZONERZY',
                                      formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('-j', metavar='JSON', help='Original JSON serialized object', required=True)
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-j', metavar='JSON', help='Original JSON serialized object', type=str, default=None)
+    group.add_argument('-F', metavar='FILE', help='Fuzz a file', type=str, default=None)
     parser.add_argument('-p', metavar='PARAMS', help='Parameters comma separated', required=False, default=None)
     parser.add_argument('-t', metavar='TECHNIQUES', help='Techniques "CHPTRSX"\n\n'
                                                          'C - Command Execution\n'
@@ -449,17 +516,36 @@ if __name__ == "__main__":
     parser.add_argument('-f', metavar='FUZZ_FACTOR', help='Fuzz factor [0-6]', type=int, default=6, required=False)
     parser.add_argument('-i', metavar='INDENT', help='JSON indent number', type=int, default=0, required=False)
     parser.add_argument('-ue', action='store_true', help='URLEncode result', dest='ue', default=False, required=False)
+    parser.add_argument('-d', action='store_true', help='Enable fuzzing Debug', dest='d', default=False, required=False)
     parser.add_argument('-s', action='store_true', help='Strong fuzz without maintaining structure', dest='s',
                         default=False, required=False)
+    parser.add_argument('-x', action='store_true', help='Exclude params selected by -p switch', dest='x',
+                        default=False, required=False)
     args = parser.parse_args()
-    obj = JSONFactory(args.t, args.p, args.s)
-    obj.initWithJSON(args.j)
-    obj.ffactor(args.f)
-    if args.ue:
-        sys.stdout.write(urllib.quote(obj.fuzz()))
+    obj = JSONFactory(techniques=args.t, params=args.p, strong_fuzz=args.s, debug=args.d, exclude=args.x)
+    if args.F is not None:
+        try:
+            with file(args.F, "r+") as fuzz_file:
+                obj.initWithJSON(urllib.unquote(fuzz_file.read()))
+                obj.ffactor(args.f)
+                with file(args.F, "w+") as fuzz:
+                    if args.ue:
+                        fuzz.write(urllib.quote(obj.fuzz()))
+                    else:
+                        if args.i == 0:
+                            fuzz.write(obj.fuzz())
+                        else:
+                            fuzz.write(obj.fuzz(args.i))
+        except IOError:
+            sys.stderr.write("[ERROR] File '%s' not found!\n\n" % args.F)
     else:
-        if args.i == 0:
-            sys.stdout.write(obj.fuzz())
+        obj.initWithJSON(args.j)
+        obj.ffactor(args.f)
+        if args.ue:
+            sys.stdout.write(urllib.quote(obj.fuzz()))
         else:
-            sys.stdout.write(obj.fuzz(args.i))
+            if args.i == 0:
+                sys.stdout.write(obj.fuzz())
+            else:
+                sys.stdout.write(obj.fuzz(args.i))
     gc.collect()
