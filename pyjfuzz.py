@@ -20,7 +20,7 @@ copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -35,6 +35,8 @@ import urllib
 import sys
 import argparse
 import time
+import socket
+import signal
 
 __version__ = 0.1
 __author__ = "Daniele 'dzonerzy' Linguaglossa"
@@ -80,6 +82,7 @@ class JSONFactory:
         if behavior_based and (techniques is not None or params is not None or strong_fuzz is not False):
             raise EnvironmentError("No other options must be specified while using behavior-based fuzzing!\n\n")
         if strong_fuzz and (techniques is not None or params is not None or behavior_based is not False):
+            print techniques,params,behavior_based
             raise EnvironmentError("No other options must be specified while using strong fuzzing!\n\n")
         self.behavior_based = behavior_based
         self.strong_fuzz = strong_fuzz
@@ -497,6 +500,67 @@ class JSONFactory:
             representation += "%s => %s\n" % (element, properties[element])
         return representation
 
+    def start_server(self, ip_port):
+        from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+        from SocketServer import ThreadingMixIn
+
+        ip, port = ip_port.split(":")
+        fuzz_factor = self.fuzz_factor
+        params = self.params
+        strong_fuzz = self.strong_fuzz
+        exclude = self.exclude
+        org_json = json.dumps(self.clean_result(self.__dict__))
+
+        def stop_server(*arguments):
+            sys.stdout.write("\n[INFO] Stopping built-in server...\n")
+            sys.exit(-1)
+
+        class Handler(BaseHTTPRequestHandler):
+            obj = JSONFactory(params=params, strong_fuzz=strong_fuzz, exclude=exclude)
+
+            def do_GET(self):
+                self.obj.initWithJSON(org_json)
+                self.obj.ffactor(fuzz_factor)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(self.obj.fuzz(indent=5))
+                self.wfile.write('\n')
+                return
+
+            def do_POST(self):
+                self.do_GET()
+
+            def do_PUT(self):
+                self.do_GET()
+
+        class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+            """Handle requests in a separate thread."""
+
+        signal.signal(signal.SIGINT, stop_server)
+        server = ThreadedHTTPServer((ip, int(port)), Handler)
+        sys.stdout.write("[INFO] Starting built-in server, use <Ctrl-C> to stop\n")
+        server.serve_forever()
+
+    @staticmethod
+    def check_address_port(value):
+        try:
+            ip, port = value.split(":")
+            int(port)
+            try:
+                socket.inet_pton(socket.AF_INET, ip)
+            except AttributeError:
+                try:
+                    socket.inet_aton(ip)
+                except socket.error:
+                    raise BaseException
+            except:
+                raise BaseException
+        except BaseException:
+            raise parser.error("Please insert a valid <ip:port> value!")
+        return value
+
+
 if __name__ == "__main__":
     sys.stderr.write("PyJFuzz v{0} - {1} - {2}\n\n".format(__version__, __author__, __mail__))
     parser = argparse.ArgumentParser(description='Trivial Python JSON Fuzzer (c) DZONERZY',
@@ -521,6 +585,8 @@ if __name__ == "__main__":
                         default=False, required=False)
     parser.add_argument('-x', action='store_true', help='Exclude params selected by -p switch', dest='x',
                         default=False, required=False)
+    parser.add_argument('-ws', metavar='IP:PORT', help='Enable built-in REST API server', dest='ws',
+                        type=JSONFactory.check_address_port, default="", required=False)
     args = parser.parse_args()
     obj = JSONFactory(techniques=args.t, params=args.p, strong_fuzz=args.s, debug=args.d, exclude=args.x)
     if args.F is not None:
@@ -541,7 +607,9 @@ if __name__ == "__main__":
     else:
         obj.initWithJSON(args.j)
         obj.ffactor(args.f)
-        if args.ue:
+        if args.ws:
+            obj.start_server(args.ws)
+        elif args.ue:
             sys.stdout.write(urllib.quote(obj.fuzz()))
         else:
             if args.i == 0:
