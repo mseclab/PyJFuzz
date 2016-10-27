@@ -209,9 +209,7 @@ class JSONFactory:
         temp = tempfile.NamedTemporaryFile(delete=False)
         name = temp.name
         sys.stdout.write("[INFO] Generated temp file '%s'\n" % name)
-        f = js.fuzz()
-        print f
-        temp.write(f)
+        temp.write(js.fuzz())
         temp.close()
         for cmd in command:
             if "@@" in cmd:
