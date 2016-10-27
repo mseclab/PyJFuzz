@@ -11,7 +11,7 @@ PyJFuzz simplify the task to fuzz rest API web server since it's a commandline u
 - **Radamsa**
 
 ## Usage
-![CommandLine](http://s22.postimg.org/9nb4hjtrl/Schermata_2016_10_27_alle_12_38_12.png "Command line")
+![CommandLine](http://s10.postimg.org/9vfhd7qjd/Schermata_2016_10_27_alle_22_26_50.png "Command line")
 
 ## Examples
 
