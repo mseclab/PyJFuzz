@@ -266,6 +266,44 @@ You should see something similiar
 
 ![CommandLine](http://s14.postimg.org/rvla9ylr5/Schermata_2016_10_27_alle_12_44_54.png "REST server")
 
+## Using as a command line fuzzer
+PyJFuzz can be used as a command line fuzzer, like below:
+```
+dzonerzy:jsonfuzz dzonerzy$ while true; do python pyjfuzz.py -j '{"a": true,"B": null, "c": 0, "d":[1,2,3,4,5]}' -s -c  -- /Users/dzonerzy/PycharmProjects/jsonfuzz/libjson/jsonlint --verify @@; sleep 3; done
+```
+Result should be something similiar
+```
+[INFO] Generated temp file '/var/folders/1y/w2wmcc6x4m10d3f1w16p19ww0000gn/T/tmpbHYPMn'
+[ALERT] Process exited with 1
+PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.com
+
+[INFO] Generated temp file '/var/folders/1y/w2wmcc6x4m10d3f1w16p19ww0000gn/T/tmpJIjGRm'
+[ALERT] Process exited with 0
+PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.com
+
+[INFO] Generated temp file '/var/folders/1y/w2wmcc6x4m10d3f1w16p19ww0000gn/T/tmp5z2VsR'
+[ALERT] Process exited with 0
+PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.com
+
+[INFO] Generated temp file '/var/folders/1y/w2wmcc6x4m10d3f1w16p19ww0000gn/T/tmphV_JBZ'
+[ALERT] Process exited with 1
+```
+Whenever a SIGSEGV is found testcase won't be deleted like following
+```
+dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '{"a": true,"B": null, "c": 0, "d":[1,2,3,4,5]}' -s -c  -- /Users/dzonerzy/PycharmProjects/jsonfuzz/sigsegv -file @@
+PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.com
+
+[INFO] Generated temp file '/var/folders/1y/w2wmcc6x4m10d3f1w16p19ww0000gn/T/tmpp6K6va'
+[ALERT] Process crashed with SIGSEGV
+dzonerzy:jsonfuzz dzonerzy$ cat /var/folders/1y/w2wmcc6x4m10d3f1w16p19ww0000gn/T/tmpp6K6va
+{"a": true, "c": 0, "B": null, "d": [1, 2, 3, 4, 5]}���t�
+�U�9~�(�N��}��+#̃��RZ�q8W%� )�`R�b���;�                   ��F�l�L!���2
+                                      �-�4�p%�Կ
+�a�8�ү$#V|kz_�?F߶6%��(�K�Q@��A��7lxΝ�lwԥ����
+....
+....
+```
+
 ## Bonus!
 This is a small gift for lazy people, below you will find a link to burp-pyjfuzz a Burp Suite plugin which will implement PyJFuzz for fuzzing purpose!
 
