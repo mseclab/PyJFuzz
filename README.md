@@ -251,6 +251,21 @@ the result should be something similiar
 ```
 It will start fuzzing all elements and finish fuzzing the only element which cause strange behavior.
 
+## Built-in REST server
+PyJFuzz is shipped with a built-in REST API server, you can use it to fuzz Browsers, client application and much more...the limit is your mind.
+Below and example of running built-in server:
+```
+dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '{"nome": "Daniele", "cognome": "Linguaglossa", "eta": 22}' -ws 127.0.0.1:1234 -f 6
+PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.com
+
+[INFO] Starting built-in server, use <Ctrl-C> to stop
+127.0.0.1 - - [27/Oct/2016 12:44:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2016 12:44:44] "GET /favicon.ico HTTP/1.1" 200 -
+```
+You should see something similiar
+
+![CommandLine](http://s14.postimg.org/rvla9ylr5/Schermata_2016_10_27_alle_12_44_54.png "REST server")
+
 ## Bonus!
 This is a small gift for lazy people, below you will find a link to burp-pyjfuzz a Burp Suite plugin which will implement PyJFuzz for fuzzing purpose!
 
