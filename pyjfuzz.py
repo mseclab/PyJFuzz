@@ -516,7 +516,7 @@ class JSONFactory:
             sys.exit(-1)
 
         class Handler(BaseHTTPRequestHandler):
-            obj = JSONFactory(params=params, strong_fuzz=strong_fuzz, exclude=exclude)
+            obj = JSONFactory(params=params, strong_fuzz=False, exclude=exclude)
 
             def do_GET(self):
                 self.obj.initWithJSON(org_json)
