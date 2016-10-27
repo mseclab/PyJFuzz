@@ -37,6 +37,8 @@ import argparse
 import time
 import socket
 import signal
+import tempfile
+import os
 
 __version__ = 0.1
 __author__ = "Daniele 'dzonerzy' Linguaglossa"
@@ -70,6 +72,7 @@ class JSONFactory:
     tech = []
     debug = False
     exclude = False
+    callback = None
 
     def __init__(self, techniques=None, params=None, strong_fuzz=False, behavior_based=False, debug=False,
                  exclude=False):
@@ -82,7 +85,6 @@ class JSONFactory:
         if behavior_based and (techniques is not None or params is not None or strong_fuzz is not False):
             raise EnvironmentError("No other options must be specified while using behavior-based fuzzing!\n\n")
         if strong_fuzz and (techniques is not None or params is not None or behavior_based is not False):
-            print techniques,params,behavior_based
             raise EnvironmentError("No other options must be specified while using strong fuzzing!\n\n")
         self.behavior_based = behavior_based
         self.strong_fuzz = strong_fuzz
@@ -117,6 +119,7 @@ class JSONFactory:
         behavior = self.behavior
         debug = self.debug
         exclude = self.exclude
+        callback = None
         try:
             self.__dict__ = json.loads(json_obj)
         except TypeError:
@@ -133,6 +136,7 @@ class JSONFactory:
         self.behavior_based = behavior_based
         self.debug = debug
         self.exclude = exclude
+        self.callback = callback
         if len(tech) != 0:
             for t in tech:
                 if t in self.techniques.keys():
@@ -182,6 +186,51 @@ class JSONFactory:
         return self.statistics(start_time, self._json_dumps(
             self.fuzz_elements(self.__dict__, self.fuzz_factor), indent=indent), debug=self.debug)
 
+    def fuzz_command_line_callback(self, func):
+        """
+        Set a callback fro fuzz_command_line function
+        :param func: A callback receiving a process object
+        :return: None
+        """
+        if callable(func):
+            self.callback = func
+        else:
+            raise TypeError("Func must be a callable object e.g. function!")
+
+    def fuzz_command_line(self, command):
+        """
+        Execute command and pass an argument to a fuzzed JSON file
+        :param command: command to execute
+        :return: None
+        """
+        tech = self.tech if len(self.tech) != 0 else None
+        js = JSONFactory(techniques=tech, params=self.params, strong_fuzz=self.strong_fuzz, exclude=self.exclude)
+        js.initWithJSON(json.dumps(self.clean_result(self.__dict__)))
+        temp = tempfile.NamedTemporaryFile(delete=False)
+        name = temp.name
+        sys.stdout.write("[INFO] Generated temp file '%s'\n" % name)
+        f = js.fuzz()
+        print f
+        temp.write(f)
+        temp.close()
+        for cmd in command:
+            if "@@" in cmd:
+                command[command.index(cmd)] = command[command.index(cmd)].replace("@@", name)
+                process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                if self.callback is not None:
+                    self.callback(name, process)
+                process.wait()
+                if process.returncode == -11:
+                    sys.stdout.write("[ALERT] Process crashed with SIGSEGV\n")
+                    return
+                else:
+                    sys.stdout.write("[ALERT] Process exited with %d\n" % process.returncode)
+                os.unlink(name)
+                return
+            else:
+                pass
+        raise ValueError("Please specify @@ position while using -c switch!")
+
     def fuzz_elements(self, elements, factor):
         """
         Fuzz every element specified by elements and self.params (all if None)
@@ -201,7 +250,7 @@ class JSONFactory:
         else:
             for element in elements.keys():
                 if element in ["fuzz_factor", "was_array", "is_fuzzed", "params", "techniques", "tech", "strong_fuzz",
-                               "behavior", "behavior_based", "debug", "exclude"]:
+                               "behavior", "behavior_based", "debug", "exclude", "callback"]:
                     pass
                 else:
                     if self.params is not None and self.check_params(element):
@@ -378,6 +427,7 @@ class JSONFactory:
         del result["behavior_based"]
         del result["debug"]
         del result["exclude"]
+        del result["callback"]
         return result
 
     def is_behavior_fuzz(self, kind):
@@ -490,22 +540,40 @@ class JSONFactory:
         return "".join(encoding(x) if x not in string.printable.strip("\t\n\r\x0b\x0c") else x for x in output)
 
     def statistics(self, start, result, debug=False):
+        """
+        Fuzzing time statistics
+        :param start: start time
+        :param result: The fuzzed object
+        :param debug: debug boolean
+        :return: The fuzzed object
+        """
         if debug:
             sys.stderr.write("[DEBUG] Fuzzing completed took ({0} sec)\n\n".format(round(time.time()-start, 4)))
         return result
 
     def repr(self, properties):
+        """
+        Represent a dict with key => value
+        :param properties: dict with properties
+        :return: String
+        """
         representation = "\n"
         for element in properties.keys():
             representation += "%s => %s\n" % (element, properties[element])
         return representation
 
     def start_server(self, ip_port):
+        """
+        Built-in server used to fuzz browser or client app
+        :param ip_port: ip/port
+        :return: None
+        """
         from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
         from SocketServer import ThreadingMixIn
 
         ip, port = ip_port.split(":")
         fuzz_factor = self.fuzz_factor
+        techniques = None if len(self.tech) == 0 else self.tech
         params = self.params
         strong_fuzz = self.strong_fuzz
         exclude = self.exclude
@@ -516,7 +584,7 @@ class JSONFactory:
             sys.exit(-1)
 
         class Handler(BaseHTTPRequestHandler):
-            obj = JSONFactory(params=params, strong_fuzz=False, exclude=exclude)
+            obj = JSONFactory(techniques=techniques, params=params, strong_fuzz=strong_fuzz, exclude=exclude)
 
             def do_GET(self):
                 self.obj.initWithJSON(org_json)
@@ -544,9 +612,14 @@ class JSONFactory:
 
     @staticmethod
     def check_address_port(value):
+        """
+        Check validity of ip/port
+        :param value: ip and port value
+        :return: Parser Exception or correct value
+        """
         try:
             ip, port = value.split(":")
-            int(port)
+            int(port) if int(port) <= 65535 else int("error")
             try:
                 socket.inet_pton(socket.AF_INET, ip)
             except AttributeError:
@@ -586,7 +659,10 @@ if __name__ == "__main__":
     parser.add_argument('-x', action='store_true', help='Exclude params selected by -p switch', dest='x',
                         default=False, required=False)
     parser.add_argument('-ws', metavar='IP:PORT', help='Enable built-in REST API server', dest='ws',
-                        type=JSONFactory.check_address_port, default="", required=False)
+                        type=JSONFactory.check_address_port, default=False, required=False)
+    parser.add_argument('-c', action='store_true', help='Execute the command specified by positional args, use @@'
+                        ' to indicate filename', dest='c', default=False, required=False)
+    parser.add_argument('positional', nargs='*')
     args = parser.parse_args()
     obj = JSONFactory(techniques=args.t, params=args.p, strong_fuzz=args.s, debug=args.d, exclude=args.x)
     if args.F is not None:
@@ -609,6 +685,8 @@ if __name__ == "__main__":
         obj.ffactor(args.f)
         if args.ws:
             obj.start_server(args.ws)
+        elif args.c:
+            obj.fuzz_command_line(args.positional)
         elif args.ue:
             sys.stdout.write(urllib.quote(obj.fuzz()))
         else:
