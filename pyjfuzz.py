@@ -39,8 +39,9 @@ import socket
 import signal
 import tempfile
 import os
+from distutils.version import LooseVersion
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __author__ = "Daniele 'dzonerzy' Linguaglossa"
 __mail__ = "d.linguaglossa@mseclab.com"
 
@@ -631,6 +632,7 @@ class JSONFactory:
             raise parser.error("Please insert a valid <ip:port> value!")
         return value
 
+sys.argv.append("--update")
 
 if __name__ == "__main__":
     sys.stderr.write("PyJFuzz v{0} - {1} - {2}\n\n".format(__version__, __author__, __mail__))
@@ -639,6 +641,8 @@ if __name__ == "__main__":
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-j', metavar='JSON', help='Original JSON serialized object', type=str, default=None)
     group.add_argument('-F', metavar='FILE', help='Fuzz a file', type=str, default=None)
+    group.add_argument('--update', action='store_true', help='Check for updates', dest='update', default=False,
+                       required=False)
     parser.add_argument('-p', metavar='PARAMS', help='Parameters comma separated', required=False, default=None)
     parser.add_argument('-t', metavar='TECHNIQUES', help='Techniques "CHPTRSX"\n\n'
                                                          'C - Command Execution\n'
@@ -660,9 +664,54 @@ if __name__ == "__main__":
                         type=JSONFactory.check_address_port, default=False, required=False)
     parser.add_argument('-c', action='store_true', help='Execute the command specified by positional args, use @@'
                         ' to indicate filename', dest='c', default=False, required=False)
-    parser.add_argument('positional', nargs='*')
+    parser.add_argument('command', nargs='*')
     args = parser.parse_args()
     obj = JSONFactory(techniques=args.t, params=args.p, strong_fuzz=args.s, debug=args.d, exclude=args.x)
+    if args.update:
+        sys.stdout.write("[INFO] Checking updates...\n")
+        temp_name = next(tempfile._get_candidate_names())
+        os.chdir(tempfile.gettempdir())
+        process = subprocess.Popen(["wget", "https://raw.githubusercontent.com/mseclab/PyJFuzz/master/pyjfuzz.py", "-O",
+                                    "%s.py" % temp_name], stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        process.wait()
+        if process.returncode == 0:
+            update = subprocess.Popen(["python", "-c", "import sys;from %s import __version__; "
+                                                       "sys.stdout.write(__version__)" % temp_name],
+                                      stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+            v = update.communicate()[0]
+            update.wait()
+            if update.returncode == 0:
+                if LooseVersion(v) > LooseVersion(__version__):
+                    sys.stdout.write("[INFO] Found an update! PyJFuzz v%s\n" % v)
+                    sys.stdout.write("[INFO] Downloading and installing via git, you may be asked to provide "
+                                     "root password\n")
+                    git = subprocess.Popen(["git", "clone", "https://github.com/mseclab/PyJFuzz.git"],
+                                           stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    git.wait()
+                    if git.returncode == 0:
+                        os.chdir(os.path.join(tempfile.gettempdir(), "PyJFuzz"))
+                        sys.stdout.write("[INFO] Download finished, Installing...\n")
+                        install = subprocess.Popen(["sudo", "python", "setup.py", "install"], stdin=subprocess.PIPE,
+                                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        install.wait()
+                        if install.returncode == 0:
+                            sys.stdout.write("[INFO] Installation completed! Please restart PyJFuzz\n")
+                        else:
+                            sys.stdout.write("[ERROR] An error occurred during installation :(\n")
+                    else:
+                        sys.stdout.write("[ERROR] An error occurred during download, try manually :(\n")
+                else:
+                    sys.stdout.write("[INFO] Currently there are no new updates, try again later :)\n")
+            else:
+                sys.stdout.write("[ERROR] Cannot find updated version\n")
+        else:
+            sys.stdout.write("[ERROR] Project unavailable, please retry again later\n")
+        subprocess.Popen(["sudo", "rm", "-r", "%s.py" % temp_name], stdout=subprocess.PIPE,
+                         stdin=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+        subprocess.Popen(["sudo", "rm", "-r", "PyJFuzz"], stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+                         stderr=subprocess.PIPE).communicate()
+        sys.exit(-1)
     if args.F is not None:
         try:
             with file(args.F, "r+") as fuzz_file:
@@ -684,7 +733,7 @@ if __name__ == "__main__":
         if args.ws:
             obj.start_server(args.ws)
         elif args.c:
-            obj.fuzz_command_line(args.positional)
+            obj.fuzz_command_line(args.command)
         elif args.ue:
             sys.stdout.write(urllib.quote(obj.fuzz()))
         else:
