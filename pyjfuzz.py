@@ -668,46 +668,49 @@ if __name__ == "__main__":
     if args.update:
         sys.stdout.write("[INFO] Checking updates...\n")
         temp_name = next(tempfile._get_candidate_names())
-        os.chdir(tempfile.gettempdir())
-        process = subprocess.Popen(["wget", "https://raw.githubusercontent.com/mseclab/PyJFuzz/master/pyjfuzz.py", "-O",
-                                    "%s.py" % temp_name], stdout=subprocess.PIPE, stdin=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
-        process.wait()
-        if process.returncode == 0:
-            update = subprocess.Popen(["python", "-c", "import sys;from %s import __version__; "
-                                                       "sys.stdout.write(__version__)" % temp_name],
-                                      stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-            v = update.communicate()[0]
-            update.wait()
-            if update.returncode == 0:
-                if LooseVersion(v) > LooseVersion(__version__):
-                    sys.stdout.write("[INFO] Found an update! PyJFuzz v%s\n" % v)
-                    sys.stdout.write("[INFO] Downloading and installing via git, you may be asked to provide "
-                                     "root password\n")
-                    git = subprocess.Popen(["git", "clone", "https://github.com/mseclab/PyJFuzz.git"],
-                                           stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    git.wait()
-                    if git.returncode == 0:
-                        os.chdir(os.path.join(tempfile.gettempdir(), "PyJFuzz"))
-                        sys.stdout.write("[INFO] Download finished, Installing...\n")
-                        install = subprocess.Popen(["sudo", "python", "setup.py", "install"], stdout=subprocess.PIPE, 
-                                                   stderr=subprocess.PIPE)
-                        install.wait()
-                        if install.returncode == 0:
-                            sys.stdout.write("[INFO] Installation completed! Please restart PyJFuzz\n")
+        try:
+            os.chdir(tempfile.gettempdir())
+            process = subprocess.Popen(["wget", "https://raw.githubusercontent.com/mseclab/PyJFuzz/master/pyjfuzz.py", "-O",
+                                        "%s.py" % temp_name], stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+                                       stderr=subprocess.PIPE)
+            process.wait()
+            if process.returncode == 0:
+                update = subprocess.Popen(["python", "-c", "import sys;from %s import __version__; "
+                                                           "sys.stdout.write(__version__)" % temp_name],
+                                          stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+                v = update.communicate()[0]
+                update.wait()
+                if update.returncode == 0:
+                    if LooseVersion(v) > LooseVersion(__version__):
+                        sys.stdout.write("[INFO] Found an update! PyJFuzz v%s\n" % v)
+                        sys.stdout.write("[INFO] Downloading and installing via git, you may be asked to provide "
+                                         "root password\n")
+                        subprocess.Popen(["sudo", "rm", "-r", "PyJFuzz"], stderr=subprocess.PIPE).communicate()
+                        git = subprocess.Popen(["git", "clone", "https://github.com/mseclab/PyJFuzz.git"],
+                                               stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        git.wait()
+                        if git.returncode == 0:
+                            os.chdir(os.path.join(tempfile.gettempdir(), "PyJFuzz"))
+                            sys.stdout.write("[INFO] Download finished, Installing...\n")
+                            install = subprocess.Popen(["sudo", "python", "setup.py", "install"], stdout=subprocess.PIPE,
+                                                       stderr=subprocess.PIPE)
+                            install.wait()
+                            if install.returncode == 0:
+                                sys.stdout.write("[INFO] Installation completed! Please restart PyJFuzz\n")
+                            else:
+                                sys.stdout.write("[ERROR] An error occurred during installation :(\n")
                         else:
-                            sys.stdout.write("[ERROR] An error occurred during installation :(\n")
+                            sys.stdout.write("[ERROR] An error occurred during download, try manually :(\n")
                     else:
-                        sys.stdout.write("[ERROR] An error occurred during download, try manually :(\n")
+                        sys.stdout.write("[INFO] Currently there are no new updates, try again later :)\n")
                 else:
-                    sys.stdout.write("[INFO] Currently there are no new updates, try again later :)\n")
+                    sys.stdout.write("[ERROR] Cannot find updated version\n")
             else:
-                sys.stdout.write("[ERROR] Cannot find updated version\n")
-        else:
-            sys.stdout.write("[ERROR] Project unavailable, please retry again later\n")
-        subprocess.Popen(["sudo", "rm", "-r", "%s.py" % temp_name], stdout=subprocess.PIPE, 
-                         stderr=subprocess.PIPE).communicate()
-        subprocess.Popen(["sudo", "rm", "-r", "PyJFuzz"], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+                sys.stdout.write("[ERROR] Project unavailable, please retry again later\n")
+        except Exception:
+            sys.stdout.write("[ERROR] An unexpected error occurred, please try again later\n")
+
+        subprocess.Popen(["sudo", "rm", "-r", "%s.py" % temp_name], stderr=subprocess.PIPE).communicate()
         sys.exit(-1)
     if args.F is not None:
         try:
