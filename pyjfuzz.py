@@ -632,8 +632,6 @@ class JSONFactory:
             raise parser.error("Please insert a valid <ip:port> value!")
         return value
 
-sys.argv.append("--update")
-
 if __name__ == "__main__":
     sys.stderr.write("PyJFuzz v{0} - {1} - {2}\n\n".format(__version__, __author__, __mail__))
     parser = argparse.ArgumentParser(description='Trivial Python JSON Fuzzer (c) DZONERZY',
@@ -692,8 +690,8 @@ if __name__ == "__main__":
                     if git.returncode == 0:
                         os.chdir(os.path.join(tempfile.gettempdir(), "PyJFuzz"))
                         sys.stdout.write("[INFO] Download finished, Installing...\n")
-                        install = subprocess.Popen(["sudo", "python", "setup.py", "install"], stdin=subprocess.PIPE,
-                                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        install = subprocess.Popen(["sudo", "python", "setup.py", "install"], stdout=subprocess.PIPE, 
+                                                   stderr=subprocess.PIPE)
                         install.wait()
                         if install.returncode == 0:
                             sys.stdout.write("[INFO] Installation completed! Please restart PyJFuzz\n")
@@ -707,10 +705,9 @@ if __name__ == "__main__":
                 sys.stdout.write("[ERROR] Cannot find updated version\n")
         else:
             sys.stdout.write("[ERROR] Project unavailable, please retry again later\n")
-        subprocess.Popen(["sudo", "rm", "-r", "%s.py" % temp_name], stdout=subprocess.PIPE,
-                         stdin=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-        subprocess.Popen(["sudo", "rm", "-r", "PyJFuzz"], stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+        subprocess.Popen(["sudo", "rm", "-r", "%s.py" % temp_name], stdout=subprocess.PIPE, 
                          stderr=subprocess.PIPE).communicate()
+        subprocess.Popen(["sudo", "rm", "-r", "PyJFuzz"], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
         sys.exit(-1)
     if args.F is not None:
         try:
