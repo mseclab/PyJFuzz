@@ -33,7 +33,7 @@ def read(fname):
 
 setup(
         name="PyJFuzz",
-        version="0.1",
+        version="1.0.0",
         author="Daniele Lingualossa",
         author_email="d.linguaglossa@mseclab.it",
         description="Trivial JSON fuzzer written in python (based on radamsa)",
@@ -43,7 +43,7 @@ setup(
         py_modules=["pyjfuzz"],
         scripts=["pyjfuzz.py"],
         classifiers=[
-            "Development Status :: 3 - Alpha",
+            "Development Status :: 1.0.0 - Alpha",
             "Topic :: Utilities"
         ],
 )
