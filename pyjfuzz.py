@@ -41,7 +41,7 @@ import tempfile
 import os
 from distutils.version import LooseVersion
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __author__ = "Daniele 'dzonerzy' Linguaglossa"
 __mail__ = "d.linguaglossa@mseclab.com"
 
