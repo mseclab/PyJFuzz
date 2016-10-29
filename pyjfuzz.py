@@ -34,14 +34,17 @@ import gc
 import urllib
 import sys
 import argparse
-import time
+import ntpath
 import socket
 import signal
 import tempfile
 import os
-from distutils.version import LooseVersion
+import shlex
+import time
+import struct
 
-__version__ = "1.0.0"
+
+__version__ = "1.0.1"
 __author__ = "Daniele 'dzonerzy' Linguaglossa"
 __mail__ = "d.linguaglossa@mseclab.com"
 
@@ -198,7 +201,7 @@ class JSONFactory:
         else:
             raise TypeError("Func must be a callable object e.g. function!")
 
-    def fuzz_command_line(self, command):
+    def fuzz_command_line(self, command, notify=None):
         """
         Execute command and pass an argument to a fuzzed JSON file
         :param command: command to execute
@@ -210,7 +213,8 @@ class JSONFactory:
         temp = tempfile.NamedTemporaryFile(delete=False)
         name = temp.name
         sys.stdout.write("[INFO] Generated temp file '%s'\n" % name)
-        temp.write(js.fuzz())
+        content = js.fuzz()
+        temp.write(content)
         temp.close()
         for cmd in command:
             if "@@" in cmd:
@@ -221,6 +225,8 @@ class JSONFactory:
                 process.wait()
                 if process.returncode == -11:
                     sys.stdout.write("[ALERT] Process crashed with SIGSEGV\n")
+                    if notify is not None:
+                        self.notify_crash(notify, content)
                     return
                 else:
                     sys.stdout.write("[ALERT] Process exited with %d\n" % process.returncode)
@@ -561,7 +567,7 @@ class JSONFactory:
             representation += "%s => %s\n" % (element, properties[element])
         return representation
 
-    def start_server(self, ip_port):
+    def start_server(self, ip_port, html=None, notify=None):
         """
         Built-in server used to fuzz browser or client app
         :param ip_port: ip/port
@@ -569,8 +575,10 @@ class JSONFactory:
         """
         from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
         from SocketServer import ThreadingMixIn
+        from threading import Thread
 
         ip, port = ip_port.split(":")
+        notifier = self.notify_crash
         fuzz_factor = self.fuzz_factor
         techniques = None if len(self.tech) == 0 else self.tech
         params = self.params
@@ -584,14 +592,38 @@ class JSONFactory:
 
         class Handler(BaseHTTPRequestHandler):
             obj = JSONFactory(techniques=techniques, params=params, strong_fuzz=strong_fuzz, exclude=exclude)
+            content = ""
+
+            def __init__(self, request, client_address, s):
+                monitor_thread = Thread(target=self.send_testcase, args=())
+                monitor_thread.start()
+                BaseHTTPRequestHandler.__init__(self, request, client_address, s)
+
+            def send_testcase(self):
+                while self.content == "":
+                    pass
+                if len(self.content) > 0:
+                    try:
+                        notifier(notify, self.content)
+                    except socket.error:
+                        pass
 
             def do_GET(self):
                 self.obj.initWithJSON(org_json)
                 self.obj.ffactor(fuzz_factor)
                 self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
-                self.wfile.write(self.obj.fuzz(indent=5))
+                if html is not None and ntpath.basename(html) in self.path:
+                    with open(html, "rb+") as HTML:
+                        self.send_header("Content-Type", "text/html")
+                        self.send_header("Access-Control-Allow-Origin", "*")
+                        self.end_headers()
+                        self.wfile.write(HTML.read())
+                else:
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.content = self.obj.fuzz(indent=5)
+                    self.wfile.write(self.content)
                 self.wfile.write('\n')
                 return
 
@@ -600,6 +632,9 @@ class JSONFactory:
 
             def do_PUT(self):
                 self.do_GET()
+
+            def serve_forever(self):
+                pass
 
         class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
             """Handle requests in a separate thread."""
@@ -632,13 +667,92 @@ class JSONFactory:
             raise parser.error("Please insert a valid <ip:port> value!")
         return value
 
+    @staticmethod
+    def process_monitor(command, notifier_socket="127.0.0.1:8888"):
+        """
+        Start the process monitor server
+        :param command: Command to execute and monitor
+        :param port: Port to start the TCP server used to receive the testcases
+        :return: None
+        """
+        if notifier_socket is not None:
+            notifier_socket = notifier_socket.split(":")
+
+        def start_testcase_server(accept_port=notifier_socket):
+            monitor_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            monitor_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            monitor_socket.bind((accept_port[0], int(accept_port[1])))
+            monitor_socket.listen(1)
+            return monitor_socket
+
+        def check_test_case(client_sock):
+            length = struct.unpack("<I", client_sock.recv(4))
+            data = ""
+            while len(data) < length[0]:
+                data += client_sock.recv(1024)
+            sys.stdout.write("[PROCESS MONITOR] Saving test-case with length of (%s)\n" % length)
+            csock.close()
+
+        def shutdown():
+            try:
+                sock.shutdown(socket.SHUT_RDWR)
+                sock.close()
+            except socket.error:
+                pass
+            sys.exit(0)
+
+        signal.signal(signal.SIGINT, lambda x, y: shutdown())
+        sys.stdout.write("[PROCESS MONITOR] Monitoring started, found notifier socket at [%s:%s]!\n" % (
+            notifier_socket[0],
+            notifier_socket[1]
+        ))
+
+        if notifier_socket is not None:
+            sock = start_testcase_server(notifier_socket)
+
+        while True:
+            try:
+                monitored = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE,
+                                             stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+                monitored.wait()
+            except OSError:
+                print command
+                sys.stdout.write("[PROCESS MONITOR] Error, cannot execute command\n")
+                shutdown()
+            if monitored.returncode == -11:
+                sys.stdout.write("[PROCESS MONITOR] Monitored process crashed with SIGSEGV, restarting\n")
+            else:
+                sys.stdout.write("[PROCESS MONITOR] Monitored process exited with %s\n" %
+                                 monitored.returncode)
+            sys.stdout.write("[PROCESS MONITOR] Waiting for test-case before restarting\n")
+            if notifier_socket is not None:
+                csock, p = sock.accept()
+                check_test_case(csock)
+
+    def notify_crash(self, ip_port, data):
+        """
+        Notify a SIGSEGV to a process monitor via TCP socket
+        :param ip_port: destination ip and port
+        :param data: data that cause SIGSEGV
+        :return: None
+        """
+        ip, port = ip_port.split(":")
+        notify_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        notify_socket.connect((ip, int(port)))
+        data = struct.pack("<I", len(data)) + data
+        notify_socket.send(data)
+        notify_socket.shutdown(socket.SHUT_RDWR)
+        notify_socket.close()
+
+
 if __name__ == "__main__":
     sys.stderr.write("PyJFuzz v{0} - {1} - {2}\n\n".format(__version__, __author__, __mail__))
     parser = argparse.ArgumentParser(description='Trivial Python JSON Fuzzer (c) DZONERZY',
                                      formatter_class=argparse.RawTextHelpFormatter)
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-j', metavar='JSON', help='Original JSON serialized object', type=str, default=None)
-    group.add_argument('-F', metavar='FILE', help='Fuzz a file', type=str, default=None)
+    group.add_argument('--j', metavar='JSON', help='Original JSON serialized object', type=str, default=None)
+    group.add_argument('--F', metavar='FILE', help='Fuzz a file', type=str, default=None)
+    group.add_argument('--m', metavar='COMMAND', help='Process command to start and monitor', type=str, required=False)
     group.add_argument('--update', action='store_true', help='Check for updates', dest='update', default=False,
                        required=False)
     parser.add_argument('-p', metavar='PARAMS', help='Parameters comma separated', required=False, default=None)
@@ -660,32 +774,38 @@ if __name__ == "__main__":
                         default=False, required=False)
     parser.add_argument('-ws', metavar='IP:PORT', help='Enable built-in REST API server', dest='ws',
                         type=JSONFactory.check_address_port, default=False, required=False)
+    parser.add_argument('-n', metavar='IP:PORT', help='Notify process monitor when a crash occur', dest='n',
+                        type=JSONFactory.check_address_port, default=False, required=False)
+    parser.add_argument('-sm', metavar='IP:PORT', help='Monitor notifier socket for receiving testcases', dest='sm',
+                        type=JSONFactory.check_address_port, default="127.0.0.1:8080", required=False)
+    parser.add_argument('-html', metavar='PATH', help='Path to an HTML file to serve', dest='html', type=str,
+                        required=False)
     parser.add_argument('-c', action='store_true', help='Execute the command specified by positional args, use @@'
                         ' to indicate filename', dest='c', default=False, required=False)
     parser.add_argument('command', nargs='*')
     args = parser.parse_args()
     obj = JSONFactory(techniques=args.t, params=args.p, strong_fuzz=args.s, debug=args.d, exclude=args.x)
     if args.update:
-        sys.stdout.write("[INFO] Checking updates...\n")
-        temp_name = next(tempfile._get_candidate_names())
+        from distutils.version import LooseVersion
+        sys.stdout.write("[INFO] Checking updates,  you may be asked to provide root password!\n")
+        temp_name = "".join("abcdefghijklmnopqrstuvxyzABCDEFGHIJKLMNOPQRSTUVXYZ"[random.randint(0, 49)]
+                            for _ in range(0, 10))
         try:
             os.chdir(tempfile.gettempdir())
-            process = subprocess.Popen(["wget", "https://raw.githubusercontent.com/mseclab/PyJFuzz/master/pyjfuzz.py", "-O",
-                                        "%s.py" % temp_name], stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+            process = subprocess.Popen(["wget", "https://raw.githubusercontent.com/mseclab/PyJFuzz/master/pyjfuzz.py",
+                                        "-O", "%s.py" % temp_name], stdout=subprocess.PIPE, stdin=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
             process.wait()
             if process.returncode == 0:
                 update = subprocess.Popen(["python", "-c", "import sys;from %s import __version__; "
                                                            "sys.stdout.write(__version__)" % temp_name],
-                                          stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+                                          stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
                 v = update.communicate()[0]
                 update.wait()
                 if update.returncode == 0:
                     if LooseVersion(v) > LooseVersion(__version__):
                         sys.stdout.write("[INFO] Found an update! PyJFuzz v%s\n" % v)
-                        sys.stdout.write("[INFO] Downloading and installing via git, you may be asked to provide "
-                                         "root password\n")
-                        subprocess.Popen(["sudo", "rm", "-r", "PyJFuzz"], stderr=subprocess.PIPE).communicate()
+                        sys.stdout.write("[INFO] Downloading and installing via git\n")
                         git = subprocess.Popen(["git", "clone", "https://github.com/mseclab/PyJFuzz.git"],
                                                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                         git.wait()
@@ -709,8 +829,10 @@ if __name__ == "__main__":
                 sys.stdout.write("[ERROR] Project unavailable, please retry again later\n")
         except Exception:
             sys.stdout.write("[ERROR] An unexpected error occurred, please try again later\n")
-
-        subprocess.Popen(["sudo", "rm", "-r", "%s.py" % temp_name], stderr=subprocess.PIPE).communicate()
+        os.chdir(tempfile.gettempdir())
+        subprocess.Popen(["sudo", "rm", "-r", "PyJFuzz"]).communicate()
+        subprocess.Popen(["rm", "-r", "%s.py" % temp_name]).communicate()
+        subprocess.Popen(["rm", "-r", "%s.pyc" % temp_name]).communicate()
         sys.exit(-1)
     if args.F is not None:
         try:
@@ -728,12 +850,15 @@ if __name__ == "__main__":
         except IOError:
             sys.stderr.write("[ERROR] File '%s' not found!\n\n" % args.F)
     else:
-        obj.initWithJSON(args.j)
-        obj.ffactor(args.f)
+        if args.m:
+            JSONFactory.process_monitor(args.m, args.sm)
+        else:
+            obj.initWithJSON(args.j)
+            obj.ffactor(args.f)
         if args.ws:
-            obj.start_server(args.ws)
+            obj.start_server(args.ws, html=args.html, notify=args.n)
         elif args.c:
-            obj.fuzz_command_line(args.command)
+            obj.fuzz_command_line(args.command, notify=args.n)
         elif args.ue:
             sys.stdout.write(urllib.quote(obj.fuzz()))
         else:
