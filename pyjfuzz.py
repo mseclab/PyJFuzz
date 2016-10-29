@@ -588,7 +588,7 @@ class JSONFactory:
 
         def stop_server(*arguments):
             sys.stdout.write("\n[INFO] Stopping built-in server...\n")
-            sys.exit(-1)
+            os.kill(os.getpid(), signal.SIGKILL)
 
         class Handler(BaseHTTPRequestHandler):
             obj = JSONFactory(techniques=techniques, params=params, strong_fuzz=strong_fuzz, exclude=exclude)
@@ -699,7 +699,7 @@ class JSONFactory:
                 sock.close()
             except socket.error:
                 pass
-            sys.exit(0)
+            os.kill(os.getpid(), signal.SIGKILL)
 
         signal.signal(signal.SIGINT, lambda x, y: shutdown())
         sys.stdout.write("[PROCESS MONITOR] Monitoring started, found notifier socket at [%s:%s]!\n" % (
@@ -721,13 +721,13 @@ class JSONFactory:
                 shutdown()
             if monitored.returncode == -11:
                 sys.stdout.write("[PROCESS MONITOR] Monitored process crashed with SIGSEGV, restarting\n")
+                if notifier_socket is not None:
+                    sys.stdout.write("[PROCESS MONITOR] Waiting for test-case before restarting\n")
+                    csock, p = sock.accept()
+                    check_test_case(csock)
             else:
                 sys.stdout.write("[PROCESS MONITOR] Monitored process exited with %s\n" %
                                  monitored.returncode)
-            sys.stdout.write("[PROCESS MONITOR] Waiting for test-case before restarting\n")
-            if notifier_socket is not None:
-                csock, p = sock.accept()
-                check_test_case(csock)
 
     def notify_crash(self, ip_port, data):
         """
@@ -833,7 +833,7 @@ if __name__ == "__main__":
         subprocess.Popen(["sudo", "rm", "-r", "PyJFuzz"]).communicate()
         subprocess.Popen(["rm", "-r", "%s.py" % temp_name]).communicate()
         subprocess.Popen(["rm", "-r", "%s.pyc" % temp_name]).communicate()
-        sys.exit(-1)
+        os.kill(os.getpid(), signal.SIGKILL)
     if args.F is not None:
         try:
             with file(args.F, "r+") as fuzz_file:
