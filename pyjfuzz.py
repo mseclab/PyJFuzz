@@ -44,7 +44,7 @@ import time
 import struct
 
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __author__ = "Daniele 'dzonerzy' Linguaglossa"
 __mail__ = "d.linguaglossa@mseclab.com"
 
@@ -199,7 +199,7 @@ class JSONFactory:
         if callable(func):
             self.callback = func
         else:
-            raise TypeError("Func must be a callable object e.g. function!")
+            raise TypeError("You must provide a callable object e.g. function!")
 
     def fuzz_command_line(self, command, notify=None):
         """
@@ -207,6 +207,17 @@ class JSONFactory:
         :param command: command to execute
         :return: None
         """
+        from threading import Thread
+
+        def kill_process_timeout(timeout, proc, file):
+            time.sleep(timeout)
+            try:
+                proc.kill()
+                sys.stdout.write("[ALERT] Process hangs, killed\n")
+                os.unlink(file)
+            except OSError:
+                pass
+
         tech = self.tech if len(self.tech) != 0 else None
         js = JSONFactory(techniques=tech, params=self.params, strong_fuzz=self.strong_fuzz, exclude=self.exclude)
         js.initWithJSON(json.dumps(self.clean_result(self.__dict__)))
@@ -220,6 +231,9 @@ class JSONFactory:
             if "@@" in cmd:
                 command[command.index(cmd)] = command[command.index(cmd)].replace("@@", name)
                 process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                killer = Thread(target=kill_process_timeout, args=(1, process, name))
+                killer.setDaemon(True)
+                killer.start()
                 if self.callback is not None:
                     self.callback(name, process)
                 process.wait()
@@ -228,9 +242,11 @@ class JSONFactory:
                     if notify is not None:
                         self.notify_crash(notify, content)
                     return
+                elif process.returncode == -9:
+                    pass
                 else:
                     sys.stdout.write("[ALERT] Process exited with %d\n" % process.returncode)
-                os.unlink(name)
+                    os.unlink(name)
                 return
             else:
                 pass
@@ -726,7 +742,7 @@ class JSONFactory:
                     csock, p = sock.accept()
                     check_test_case(csock)
             else:
-                sys.stdout.write("[PROCESS MONITOR] Monitored process exited with %s\n" %
+                sys.stdout.write("[PROCESS MONITOR] Monitored process exited with %s, restarting\n" %
                                  monitored.returncode)
 
     def notify_crash(self, ip_port, data):
@@ -830,9 +846,10 @@ if __name__ == "__main__":
         except Exception:
             sys.stdout.write("[ERROR] An unexpected error occurred, please try again later\n")
         os.chdir(tempfile.gettempdir())
-        subprocess.Popen(["sudo", "rm", "-r", "PyJFuzz"]).communicate()
-        subprocess.Popen(["rm", "-r", "%s.py" % temp_name]).communicate()
-        subprocess.Popen(["rm", "-r", "%s.pyc" % temp_name]).communicate()
+        PIPE = subprocess.PIPE
+        subprocess.Popen(["sudo", "rm", "-r", "PyJFuzz"], stdout=PIPE, stderr=PIPE).communicate()
+        subprocess.Popen(["rm", "-r", "%s.py" % temp_name], stdout=PIPE, stderr=PIPE).communicate()
+        subprocess.Popen(["rm", "-r", "%s.pyc" % temp_name], stdout=PIPE, stderr=PIPE).communicate()
         os.kill(os.getpid(), signal.SIGKILL)
     if args.F is not None:
         try:
