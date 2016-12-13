@@ -1,0 +1,7 @@
+{
+  "servers": {
+    "HTTP_PORT": 8080,
+    "HTTPS_PORT": 8443,
+    "TCASE_PORT": 8888
+  }
+}

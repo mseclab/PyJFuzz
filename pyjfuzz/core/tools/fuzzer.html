@@ -1,0 +1,326 @@
+<!--
+The MIT License (MIT)
+
+Copyright (c) 2016 Daniele Linguaglossa <d.linguaglossa@mseclab.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>
+        PyJFuzz - Web Fuzzing
+    </title>
+    <script src="jquery.js"></script>
+    <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap-theme.min.css">
+    <script src="bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="jquery.flot.min.js"></script>
+    <script type="text/javascript" src="jquery.flot.time.js"></script>
+    <script type="text/javascript" src="jquery.flot.axislabels.js"></script>
+    <style type="text/css">
+        .panel-red {
+          border-color: #d9534f;
+        }
+        .panel-red > .panel-heading {
+          border-color: #d9534f;
+          color: white;
+          background-color: #d9534f;
+        }
+        .panel-red > a {
+          color: #d9534f;
+        }
+        .panel-red > a:hover {
+          color: #b52b27;
+        }
+        .panel-green {
+          border-color: #5cb85c;
+        }
+        .panel-green > .panel-heading {
+          border-color: #5cb85c;
+          color: white;
+          background-color: #5cb85c;
+        }
+        .panel-green > a {
+          color: #5cb85c;
+        }
+        .panel-green > a:hover {
+          color: #3d8b3d;
+        }
+        #flotcontainer {
+        width: auto;
+        height: 400px;
+        text-align: center;
+        margin: 0 auto;
+        }
+    </style>
+</head>
+<script>
+var data = [];
+var error_per_sec = 0;
+var parsed_per_sec = 0;
+var last_exec_payload = "";
+var request = 0;
+var dataset;
+var totalPoints = 60;
+var updateInterval = 1000;
+var now = new Date().getTime();
+var options = {
+    series: {
+        lines: {
+            show: true,
+            lineWidth: 1.2,
+            fill: true
+        }
+    },
+    xaxis: {
+        mode: "time",
+        tickSize: [2, "second"],
+        tickFormatter: function(v, axis) {
+            var date = new Date(v);
+
+            if (date.getSeconds() % 20 == 0) {
+                var hours = date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
+                var minutes = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
+                var seconds = date.getSeconds() < 10 ? "0" + date.getSeconds() : date.getSeconds();
+
+                return hours + ":" + minutes + ":" + seconds;
+            } else {
+                return "";
+            }
+        },
+        axisLabel: "Time",
+        axisLabelUseCanvas: true,
+        axisLabelFontSizePixels: 12,
+        axisLabelFontFamily: 'Verdana, Arial',
+        axisLabelPadding: 10
+    },
+    yaxis: {
+        min: 0,
+        max: 100,
+        tickSize: 5,
+        tickFormatter: function(v, axis) {
+            if (v % 10 == 0) {
+                return v;
+            } else {
+                return "";
+            }
+        },
+        axisLabel: "Request number",
+        axisLabelUseCanvas: true,
+        axisLabelFontSizePixels: 12,
+        axisLabelFontFamily: 'Verdana, Arial',
+        axisLabelPadding: 6
+    },
+    legend: {
+        labelBoxBorderColor: "#fff"
+    }
+};
+
+function getStatistics() {
+    data.shift();
+    while (data.length < totalPoints) {
+        var temp = [now += updateInterval, error_per_sec + parsed_per_sec];
+        data.push(temp);
+    }
+    $("#requests-per-sec").text(request);
+    $("#error-per-sec").text(error_per_sec);
+    error_per_sec = 0;
+    $("#parsed-per-sec").text(parsed_per_sec);
+    parsed_per_sec = 0;
+    dataset = [{
+        label: "Req.",
+        data: data
+    }];
+    $.plot($("#flotcontainer"), dataset, options)
+}
+
+function getLastJSON() {
+    $("#json").text(last_exec_payload);
+}
+
+function tryJSON() {
+    $.ajax({
+        type: "GET",
+        url: "http://"+location.host,
+        async: true,
+        success: function(json) {
+            last_exec_payload = json;
+            request += 1;
+            try {
+                json = JSON.parse(json);
+                json = JSON.stringify(json);
+                for (var prop in json) {
+                    if (json.hasOwnProperty(prop)) {
+                        json[prop] = json[prop].toString();
+                    } else {
+                        error_per_sec += 1;
+                    }
+                }
+                json = json.toString();
+                parsed_per_sec += 1;
+            } catch (err) {
+                error_per_sec += 1;
+            }
+        }
+    });
+
+}
+
+function startFuzzer() {
+    if (window.tryjson == undefined) {
+        window.tryjson = setInterval(tryJSON, 20);
+    }
+}
+
+function stopFuzzer() {
+    if (window.tryjson > 0) {
+        window.tryjson = clearInterval(window.tryjson);
+    }
+}
+
+$(document).ready(function() {
+    window.tryjson = setInterval(tryJSON, 20);
+    window.statistics = setInterval(getStatistics, 1000);
+    window.lastjson = setInterval(getLastJSON, 5000);
+});
+</script>
+<body>
+<div class="page-header">
+  <h1><div class="text-center"><img src="data:image/png;base64,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"></div></h1>
+</div>
+<div id="wrapper">
+    <div id="page-wrapper" style="min-height: 250px;">
+        <div id="row">
+            <div class="col-lg-8">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <div class="text-center">
+                            <i class="fa fa-bar-chart-o fa-fw"></i>
+                            Execution Graph
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="flotcontainer"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <div class="text-center">
+                            <i class="fa fa-clock-o fa-fw"></i>
+                            Request counter
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="text-center">
+                            <h1>
+                                <span id="requests-per-sec" class="label label-primary">
+                                    0
+                                </span>
+                            </h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="row">
+            <div class="col-lg-4">
+                <div class="panel panel-red">
+                    <div class="panel-heading">
+                        <div class="text-center">
+                            <i class="fa fa-times fa-fw" aria-hidden="true"></i>
+                            Error per second
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="text-center">
+                            <h1>
+                                <span id="error-per-sec" class="label label-danger">
+                                    0
+                                </span>
+                            </h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="panel panel-green">
+                    <div class="panel-heading">
+                        <div class="text-center">
+                            <i class="fa fa-check fa-fw" aria-hidden="true"></i>
+                            Parsed per second
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="text-center">
+                            <h1>
+                                <span id="parsed-per-sec" class="label label-success">
+                                    0
+                                </span>
+                            </h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div class="text-center">
+                            <i class="fa fa-code fa-fw" aria-hidden="true"></i>
+                            Last executed payload
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="text-center">
+                            <pre><p id="json">AWAITING FOR JSON...</p></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="row">
+            <div class="col-lg-12">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <div class="text-center">
+                            <i class="fa fa-wrench fa-fw" aria-hidden="true"></i>
+                            Options
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="text-center">
+                            <button onclick="startFuzzer()" type="button" id="startbtn" class="btn btn-default">
+                                Start
+                            </button>
+                            <button onclick="stopFuzzer()" type="button" id="stopbtn" class="btn btn-default">
+                                Stop
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

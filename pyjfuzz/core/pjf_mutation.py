@@ -1,3 +1,4 @@
+"""
 The MIT License (MIT)
 
 Copyright (c) 2016 Daniele Linguaglossa <d.linguaglossa@mseclab.com>
@@ -19,3 +20,25 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+"""
+from pjf_decoretors import PJFDecorators
+
+class PJFMutation(object):
+    """
+    A class that represent a Mutation object used to mutate different types
+    """
+
+    def __init__(self, configuration):
+        self.config = configuration
+        self.decorators = PJFDecorators(self.config)
+
+    def fuzz(self, obj):
+        """
+        Generic fuzz mutator, use a decorator for the given type
+        """
+        decorators = self.decorators
+
+        @decorators.mutate_object_decorate
+        def mutate():
+            return obj
+        return mutate()

@@ -1,315 +1,315 @@
-# PyJFuzz
-PyJFuzz is a trivial and easy-to-use command line python json object fuzzer based on radamsa, it's a random object generator based on the provided object.
-It allows both object based and array based fuzzing, the techniques used are:
- - Integer fuzzing using MAX_INT MIN_INT and type changing
- - Boolean fuzzing using string and integer representation
- - String fuzzing using radamsa
- - Object and array fuzzing using above techniques recursively
+PyJFuzz
+=======
+**PyJFuzz** is a small, extensible and ready-to-use framework used to **fuzz JSON inputs**, such as mobile endpoint REST API, JSON implementation, Browsers, cli executable and much more.
 
-PyJFuzz simplify the task to fuzz rest API web server since it's a commandline utility and support native urlencode in order to be included inside webapp requests.
-## Dependencies
-- **Radamsa**
+<table>
+    <tr>
+        <th>Version</th>
+        <td>
+           1.1.0
+        </td>
+    </tr>
+    <tr>
+        <th>Homepage</th>
+        <td><a href="http://www.mseclab.com/">http://www.mseclab.com/</a></td>
+    </tr>
+        <th>Github</th>
+        <td><a href="https://github.com/mseclab/PyJFuzz">https://github.com/mseclab/PyJFuzz</a></td>
+     <tr/>
+    <tr>
+       <th>Author</th>
+       <td><a href="http://www.dzonerzy.net">Daniele Linguaglossa</a> (<a href="http://twitter.com/dzonerzy">@dzonerzy</a>)</td>
+    </tr>
+    <tr>
+        <th>License</th>
+        <td>MIT - (see LICENSE file)</td>
+    </tr>
+</table>
 
-## Usage
-![CommandLine](http://s10.postimg.org/9vfhd7qjd/Schermata_2016_10_27_alle_22_26_50.png "Command line")
+Installation
+============
 
-## Examples
+**Dependencies**
 
-### Simple object fuzzing
-```
-dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '{"element": "fuzzed", "element2": 1}' -i 3
-{
-   "element2": 4278190081,
-   "element": "|u|u|u|fuzzed|u|fuzzed|uzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzedzzed\x0a|fuzzzzzzzzzzzzzed\x0a|fuzz\x0a|fuzz\x0a|fuzz\x0a|fuzz\x0a|fuzz\x0a|fuzz\x0a|fuzz\x0a|fuzz\x0a|fuzz\x0a|fuzz\x0a|fuzz\x0a|fuzz\x0a|fuzz\x0a|fuzz\x0a|fuzz\x0a|fuzz\x0a|fuzz\x0a|fuzz\x0a|fuzz\x0a|fuzzed\x0a"
-}
-```
-```
-dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '{"element": "fuzzed", "element2": 1}' -i 3
-{
-   "element2": 287531397,
-   "element": [
-      "fuzzed"
-   ]
-}
-```
-```
-dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '{"element": "fuzzed", "element2": 1}' -i 3
-{
-   "element2": 4278190081,
-   "element": {
-      "param": "'or'=\"'1--fuzzed%0A"
-   }
-}
-```
-### Simple array fuzzing
-```
-dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '["pippo","pluto",1,null]' -i 3
-[
-   false,
-   {
-      "param": "'or'0\"or'=\"'1\"'or'1\"'1--po%250A'or'1\"or'=\"'1--pluto%250A"
-   },
-   1,
-   null,
-   "||calc.exe;&&&id|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3|3\x0a"
-]
-```
-```
-dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '["pippo","pluto",1,null]' -i 3
-[
-   "pippo",
-   null,
-   1,
-   null,
-   [
-      "\\x00",
-      "\\x00",
-      "\\x00",
-      "\\x00"
-   ]
-]
-```
-```
-dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '["pippo","pluto",1,null]' -i 3
-[
-   "/../../../../etc/passwdpippo%C0%8A",
-   "pluto",
-   4278190081,
-   null
-]
-```
-## URLEncoded payload
-PyJFuzz will provide the **-ue** switch which will automatically encode the payload in order to be used via web proxy such as Burp Suite.
+In order to work PyJFuzz need a single dependency, **bottle**, you can install it from automatic **setup.py** installation.
 
-```
-dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '["pippo","pluto",1,null]' -ue
-%5B%22pippo%22%2C%20%22pluto%22%2C%201%2C%20%5B%22None%22%5D%5D
-```
-## Fuzz factor
-Fuzz factor allows to generate complex or trivial payload during fuzzing process, you can specify a value from **0** (trivial) to **6** (complex).
+**Installation**
 
-### Trivial
+You can install PyJFuzz with the following command
+```{r, engine='bash', count_lines}
+git clone https://github.com/mseclab/PyJFuzz.git && cd PyJFuzz && sudo python setup.py install
 ```
-dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '{"a": 1, "b": "2"}' -f 0 -i 3
-{
-   "a": 255,
-   "b": "javascript:alert(/);//2&#x0a;"
-}
-```
-### Complex
-```
-dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '{"a": 1, "b": "2"}' -f 6 -i 3
-{
-   "a": -1,
-   "b": {
-      "param": "||calc.exe;&&id|1\\x0a||calc.exe;&&id|1\\x0a||calc.exexe;&&id|1\\x0a||calcalc.exe;&&id|2\\x0a||calc.exe;&&id|1\\x0a||calc.exe;&&id|1\\x0a|{calc.exe;&&id|2\\x0a"
-   }
-}
-```
-## Single parameter fuzzing
-Using the **-p** switch you will be able to fuzz just one or more parameters!
-```
-dzonerzy:~ dzonerzy$ pyjfuzz.py -j '{"ciao": 1, "test": "a", "pluto": 1}' -t C -f 2 -p test -i 5
-PyJFuzz v0.2 - Daniele 'dzonerzy' Linguaglossa - danielelinguaglossa@gmail.com
-[INFO] Using (Radamsa 0.3)
 
-{
-     "ciao": 1,
-     "pluto": 1,
-     "test": "|||cmd.exe&&id|a\u000a;||cmd|cmd.exe&&&id||a\u000a;||cmd.exe&&id||a\u000a;"
-}
-```
-Or
-```
-dzonerzy:~ dzonerzy$ pyjfuzz.py -j '{"ciao": 1, "test": "a", "pluto": 1}' -t X -f 6 -p test,ciao -i 5
-PyJFuzz v0.2 - Daniele 'dzonerzy' Linguaglossa - danielelinguaglossa@gmail.com
-[INFO] Using (Radamsa 0.3)
+Documentation and Examples
+==========================
 
-{
-     "ciao": -749870828,
-     "pluto": 1,
-     "test": "</script><svg/onload='+/\"/+/onmouseover=1/+(s=document.createElement(/script/.source),s.stack=Error().stack,s.src=(/,/+(s=document.createElement(/script/.source),s.stack=Error().stack,s.src=(/,/+(s=document.createElement(/script/.source),s.stack,s.src=(/,/+/a.net/).slice(2),document.documentElement.appendChild(s))//'>\u000a;</script><svg/onload='+/\"/+/onmouseover=1/+(s=document.createElement(/script/.source),s.stack=Error().stack,s.src=(/,/+(s=document.createElement(/script/.source),s.stack=Error().stack,s.src=(/,/+/a.net/).slice(2),document.documentElement.appendChild(s))//'>\u000a;"
-}
-```
-## Strong fuzzing
-Strong fuzzing provides the ability to do extreme fuzzing over the JSON object, the structure is not guaranteed!
-```
-dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '{"a": 1}' -s
-PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.it
-[INFO] Using (Radamsa 0.5)
+**CLI tool**
 
-{"a"�: -170141183460469231731687303715884105731k340282366920938463463374607431768389478}
-dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '{"a": 1}' -s
-PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.it
-[INFO] Using (Radamsa 0.5)
+Once installed PyJFuzz will create both a python library and a command-line utility called **pjf** (screenshot below)
 
-{"a": 1": 1 1}�
-               �dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '{"a": 1}' -s
-PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.it
-[INFO] Using (Radamsa 0.5)
+[![MENU](https://s17.postimg.org/6gvbyvzpb/cmdline.png)](https://s17.postimg.org/6gvbyvzpb/cmdline.png)
 
-{"a"‮:󠁝� �� 0}
-```
-## Random character fuzzing
-PyJFuzz can even do really dump fuzzing using random character, this is not the best option anyway could lead to strange behavior
+[![PJF](https://s16.postimg.org/rdq1iwwvp/cmdline2.png)](https://s16.postimg.org/rdq1iwwvp/cmdline2.png)
 
-```
-dzonerzy:jsonfuzz dzonerzy$ pyjfuzz.py -j '["test"]' -t R -f 1 -i 5
-PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.com
-[INFO] Using (Radamsa 0.5)
+**Library**
 
-[
-     "g[~VL?uzkk{D;rAz1e,i{*4test\u000a;"
-]
-dzonerzy:jsonfuzz dzonerzy$ pyjfuzz.py -j '["test"]' -t R -f 1 -i 5
-PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.com
-[INFO] Using (Radamsa 0.5)
+PyJFuzz could also work as a library, you can import in your project like following
 
-[
-     "'0`'e-&:8S:>4T(L`Q~i|@ir\";-9223372036854775809lMtest\u000a;"
-]
-dzonerzy:jsonfuzz dzonerzy$ pyjfuzz.py -j '["test"]' -t R -f 1 -i 5
-PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.com
-[INFO] Using (Radamsa 0.5)
-
-[
-     "'}bu+#-18446744073709551616pdltest\u000a;"
-]
-```
-## Using as a module
-PyJFuzz can be install as a standalone module this will provide you the ability to create your custom program based on PyJFuzz!
-Below an example:
 ```python
-from pyjfuzz import JSONFactory
-import json
-
-fuzzer = JSONFactory()
-for _ in range(0, 10):
-    fuzzer.initWithJSON(json.dumps({"test": "test", "num": 123, "array": ["hello", 1, True]}))
-    fuzzer.ffactor(6)
-    print fuzzer.fuzz()
+from pyjfuzz.lib import *
 ```
-The result should be something similiar
+**Classes**
 
-```
-dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz_as_a_module.py
-[INFO] Using (Radamsa 0.3)
+The available object/class are the following:
 
-{"test":"&#4;------<iies&#243;----<iies&#243;&#160;t&#10;","array":["hello",true,true],"num":123}
-{"test":"CCC&#192;&#186;t&#200;].\\&#197;test&#10;","array":[{"param":"sccript"},0,true],"num":-258252615}
-{"test":{"param":"0sdtet%0B"},"array":["&#10;","True",true],"num":-291530801}
-{"test":"test","array":["hello",-1,"True"],"num":255}
-{"test":false,"array":["--><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>-><img src=0>hello&#x0a;","False",true],"num":123}
-{"test":{"param":"C:\\..\\te&#xe1;&#x85;&#x9f;st&#x0a;C:\\..\\te&#xe1;&#x85;&#x9f;st&#x0a;C:\\..\\te&#xe1;&#x85;&#x9f;st&#x0a;"},"array":[".\\hello\u000a;.\\hello\u000a;","True",true],"num":255}
-{"test":["test"],"array":[false,-1,true],"num":255}
-{"test":"test","array":["hello","True",true],"num":true}
-{"test":["test"],"array":[{"param":"./helllo%250A"},1,true],"num":-123}
-{"test":{"param":"\"><im'\"><img smg sr'\"><img src=0>tesr'<img src=0>testest\u000a;'\"><img src=0>test\u000a;"},"array":["|$|AAA||${AAAA|$|AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}||$|AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${A|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${ABAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|$|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}|${AAA}}{${ABAA}}h}hello\u000a;{${AAA}}hello\u000a;",1867360077,true],"num":true}
-```
-## Behavior based fuzzing
-PyJFuzz support also behavior-based fuzzing via **\*_beheavior** API, logic must be implemented by the users and PyJFuzz will do calculations for you!
-Below an example of behavior-based Fuzzing:
+- ***PJFServer*** - User to start and stop built-in HTTP and HTTPS servers
+- ***PJFProcessMonitor*** - Used to monitor process crash, it will automatically restart proccess each time it crash
+- ***PJFTestcaseServer*** - The testcase server is used in conjunction with PJFProcessMonitor, whenever a process crash the testcase server will register and store the JSON which cause the crash
+- ***PJFFactory*** - It's the main object used to do the real fuzz of JSON objects
+- ***PJFConfiguration*** - It's the configuration file for each of the available objects
+- ***PJFExternalFuzzer*** - Used by PJFactory is a auxiliary class which provide an interface to other command line fuzzer such as *radamsa*
+- ***PJFMutation*** - Used by PJFFactory provide all the mutation used during fuzzing session
+- ***PJFExecutor*** - Provides an interface to interact with external process
+
+[![CLASSES](https://s4.postimg.org/7picu4y3h/lib.png)](https://s4.postimg.org/7picu4y3h/lib.png)
+
+**Examples**
+
+Below some trivial example of how-to implement PyJFuzz powered program
+
+*simple_fuzzer.py*
 ```python
-from pyjfuzz import JSONFactory
-import json
+from argparse import Namespace
+from pyjfuzz.lib import *
 
-fuzzer = JSONFactory(behavior_based=True)
-fuzzer.ffactor(6)  # start with the highest fuzz_factor
-for _ in range(0, 1000):
-    try:
-        fuzzer.initWithJSON(json.dumps({"user": "admin", "logged": True, "privs": 1}))
-        fuzzed = fuzzer.fuzz()  # generate a fuzzed object
-        print fuzzed
-        fuzzed = json.loads(fuzzed)  # parse the fuzzed object
-        try:
-            if fuzzed["privs"] > 10:
-                raise Exception  # simulate Error
-        except:
-            fuzzer.sensible_behavior(int)  # and increment the sensible counter for integer types
-    except:
-        fuzzer.sensible_behavior(str)  # caught Error while decoding invalid bytes and increment str sensible counter
-    print fuzzer.behavior  # print the actual behavior state
-```
-the result should be something similiar
-```
-{"privs":-1,"logged":1,"user":["admin"]}
-{<type 'unicode'>: 10, <type 'int'>: 10, <type 'bool'>: 10, <type 'str'>: 10, None: 10}
-{"privs":-1,"logged":1.0,"user":"nimda"}
-{<type 'unicode'>: 10, <type 'int'>: 10, <type 'bool'>: 10, <type 'str'>: 10, None: 10}
-....
-....
-{"privs":1158212726,"logged":true,"user":"nimda"}
-{<type 'unicode'>: 5.100000000000017, <type 'int'>: 10, <type 'bool'>: 5.100000000000017, <type 'str'>: 5.100000000000017, None: 5.100000000000017}
-{"privs":-1,"logged":true,"user":["admin"]}
-{<type 'unicode'>: 5.100000000000017, <type 'int'>: 10, <type 'bool'>: 5.100000000000017, <type 'str'>: 5.100000000000017, None: 5.100000000000017}
-....
-....
-{"privs":-1404775343,"logged":true,"user":"admin"}
-{<type 'unicode'>: 0, <type 'int'>: 10, <type 'bool'>: 0, <type 'str'>: 0, None: 0}
-{"privs":true,"logged":true,"user":"admin"}
-{<type 'unicode'>: 0, <type 'int'>: 10, <type 'bool'>: 0, <type 'str'>: 0, None: 0}
-```
-It will start fuzzing all elements and finish fuzzing the only element which cause strange behavior.
-
-## Built-in REST server
-PyJFuzz is shipped with a built-in REST API server, you can use it to fuzz Browsers, client application and much more...the limit is your mind.
-Below and example of running built-in server:
-```
-dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '{"nome": "Daniele", "cognome": "Linguaglossa", "eta": 22}' -ws 127.0.0.1:1234 -f 6
-PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.com
-
-[INFO] Starting built-in server, use <Ctrl-C> to stop
-127.0.0.1 - - [27/Oct/2016 12:44:43] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [27/Oct/2016 12:44:44] "GET /favicon.ico HTTP/1.1" 200 -
-```
-You should see something similiar
-
-![CommandLine](http://s14.postimg.org/rvla9ylr5/Schermata_2016_10_27_alle_12_44_54.png "REST server")
-
-## Using as a command line fuzzer
-PyJFuzz can be used as a command line fuzzer, like below:
-```
-dzonerzy:jsonfuzz dzonerzy$ while true; do python pyjfuzz.py -j '{"a": true,"B": null, "c": 0, "d":[1,2,3,4,5]}' -s -c  -- /Users/dzonerzy/PycharmProjects/jsonfuzz/libjson/jsonlint --verify @@; sleep 3; done
-```
-Result should be something similiar
-```
-[INFO] Generated temp file '/var/folders/1y/w2wmcc6x4m10d3f1w16p19ww0000gn/T/tmpbHYPMn'
-[ALERT] Process exited with 1
-PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.com
-
-[INFO] Generated temp file '/var/folders/1y/w2wmcc6x4m10d3f1w16p19ww0000gn/T/tmpJIjGRm'
-[ALERT] Process exited with 0
-PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.com
-
-[INFO] Generated temp file '/var/folders/1y/w2wmcc6x4m10d3f1w16p19ww0000gn/T/tmp5z2VsR'
-[ALERT] Process exited with 0
-PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.com
-
-[INFO] Generated temp file '/var/folders/1y/w2wmcc6x4m10d3f1w16p19ww0000gn/T/tmphV_JBZ'
-[ALERT] Process exited with 1
-```
-Whenever a SIGSEGV is found testcase won't be deleted like following
-```
-dzonerzy:jsonfuzz dzonerzy$ python pyjfuzz.py -j '{"a": true,"B": null, "c": 0, "d":[1,2,3,4,5]}' -s -c  -- /Users/dzonerzy/PycharmProjects/jsonfuzz/sigsegv -file @@
-PyJFuzz v0.1 - Daniele 'dzonerzy' Linguaglossa - d.linguaglossa@mseclab.com
-
-[INFO] Generated temp file '/var/folders/1y/w2wmcc6x4m10d3f1w16p19ww0000gn/T/tmpp6K6va'
-[ALERT] Process crashed with SIGSEGV
-dzonerzy:jsonfuzz dzonerzy$ cat /var/folders/1y/w2wmcc6x4m10d3f1w16p19ww0000gn/T/tmpp6K6va
-{"a": true, "c": 0, "B": null, "d": [1, 2, 3, 4, 5]}���t�
-�U�9~�(�N��}��+#̃��RZ�q8W%� )�`R�b���;�                   ��F�l�L!���2
-                                      �-�4�p%�Կ
-�a�8�ү$#V|kz_�?F߶6%��(�K�Q@��A��7lxΝ�lwԥ����
-....
-....
+config = PJFConfiguration(Namespace(json={"test": ["1", 2, True]}, nologo=True, level=6))
+fuzzer = PJFFactory(config)
+while True:
+    print fuzzer.fuzzed
 ```
 
-## Bonus!
-This is a small gift for lazy people, below you will find a link to burp-pyjfuzz a Burp Suite plugin which will implement PyJFuzz for fuzzing purpose!
+*simple_server.py*
+```python
+from argparse import Namespace
+from pyjfuzz.lib import *
 
-[Burp-PyJFuzz](https://github.com/dzonerzy/Burp-PyJFuzz)
-![Burp](https://s15.postimg.org/574yb5c7f/Schermata_2016_10_18_alle_10_39_18.png "Burp Suite Intruder")
-#### End
-As i said before this is a dumb fuzzer anyway you can extend in order to fit your needs, please just remember to mention my name.
+config = PJFConfiguration(Namespace(json={"test": ["1", 2, True]}, nologo=True, level=6, debug=True, indent=True))
+PJFServer(config).run()
 
-\#dzonerzy
+```
+
+Sometimes you may need to modify standard non customizable settings such as HTTPS or HTTP server port, this can be done in the following way
+
+``` python
+from argparse import Namespace
+from pyjfuzz.lib import *
+
+config = PJFConfiguration(Namespace(json={"test": ["1", 2, True]}, nologo=True, level=6, indent=True))
+print config.ports["servers"]["HTTP_PORT"]   # 8080
+print config.ports["servers"]["HTTPS_PORT"]  # 8443
+print config.ports["servers"]["TCASE_PORT"]  # 8888
+config.ports["servers"]["HTTPS_PORT"] = 443  # Change HTTPS port to 443
+```
+**Remember**: *When changing default ports, you should always handle exception due to needed privileges!*
+
+Below a comprehensive list of all available settings / customization of PJFConfiguration object:
+
+**Configuration table**
+
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Type</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>json</td>
+    <td><b>dict</b></td>
+    <td>JSON object to fuzz</td>
+  </tr>
+  <tr>
+    <td>json_file</td>
+    <td><b>str</b></td>
+    <td>Path to a JSON file</td>
+  </tr>
+  <tr>
+    <td>parameters</td>
+    <td><b>list</b>&lt;str&gt;</td>
+    <td>List of parameters to fuzz (taken from JSON object)</td>
+  </tr>
+  <tr>
+    <td>techniques</td>
+    <td><b>list</b>&lt;int&gt;</td>
+    <td>List of polyglot attack, used to generate fuzzed JSON, such as XSS, LFI etc. They are in the range 0-13 (Look <b>techniques table</b>)</td>
+  </tr>
+  <tr>
+    <td>level</td>
+    <td><b>int</b></td>
+    <td>Fuzzing level in the range 0-6</td>
+  </tr>
+  <tr>
+    <td>utf8</td>
+    <td><b>bool</b></td>
+    <td>If true switch from unicode encode to pure byte representation</td>
+  </tr>
+ <tr>
+    <td>indent</td>
+    <td><b>bool</b></td>
+    <td>Set whenever to indent the result object</td>
+  </tr>
+  <tr>
+    <td>url_encode</td>
+    <td><b>bool</b></td>
+    <td>Set whenever to URLEncode the result object</td>
+  </tr>
+  <tr>
+    <td>strong_fuzz</td>
+    <td><b>bool</b></td>
+    <td>Set whenever to use <i>strong fuzzing</i> (strong fuzzing will not maintain JSON structure, usefull for parser fuzzing)</td>
+  </tr>
+  <tr>
+    <td>debug</td>
+    <td><b>bool</b></td>
+    <td>Set whenever to enable debug prints</td>
+  </tr>
+  <tr>
+    <td>exclude</td>
+    <td><b>bool</b></td>
+    <td>Exclude from fuzzing parameters selected by parameters option</td>
+  </tr>
+  <tr>
+    <td>notify</td>
+    <td><b>bool</b></td>
+    <td>Set whenever to notify process monitor when a crash occurs only used with PJFServer</td>
+  </tr>
+  <tr>
+    <td>html</td>
+    <td><b>str</b></td>
+    <td>Path to an HTML directory to serve within PJFServer</td>
+  </tr>
+  <tr>
+    <td>ext_fuzz</td>
+    <td><b>bool</b></td>
+    <td>Set whenever to use binary from "command" as an externale fuzzer</td>
+  </tr>
+    <tr>
+    <td>cmd_fuzz</td>
+    <td><b>bool</b></td>
+    <td>Set whenever to use binary from "command" as fuzzer target</td>
+  </tr>
+    <tr>
+    <td>content_type</td>
+    <td><b>str</b></td>
+    <td>Set the content type result of PJFServer (default <b>application/json</b>)</td>
+  </tr>
+  <tr>
+    <td>command</td>
+    <td><b>list</b>&lt;str&gt;</td>
+    <td>Command to execute each paramester is a list element, you could use <b>shlex.split</b> from python</td>
+  </tr>
+</table>
+
+**Techniques table**
+
+<table>
+  <tr>
+    <th>Index</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>0</td>
+    <td>XSS injection (Polyglot)</td>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td>SQL injection (Polyglot)</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>LFI attack</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>SQL injection polyglot (2)</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>XSS injection (Polyglot) (2)</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td>RCE injection (Polyglot)</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td>LFI attack (2)</td>
+  </tr>
+  <tr>
+    <td>7</td>
+    <td>Data URI attack</td>
+  </tr>
+  <tr>
+    <td>8</td>
+    <td>LFI and HREF attack</td>
+  </tr>
+  <tr>
+    <td>9</td>
+    <td>Header injection</td>
+  </tr>
+  <tr>
+    <td>10</td>
+    <td>RCE injection (Polyglot) (2)</td>
+  </tr>
+  <tr>
+    <td>11</td>
+    <td>Generic templace injection</td>
+  </tr>
+  <tr>
+    <td>12</td>
+    <td>Flask template injection</td>
+  </tr>
+  <tr>
+    <td>13</td>
+    <td>Random character attack</td>
+  </tr>
+</table>
+
+Screenshots
+===========
+
+Below some screenshot just to let you know what you should expect from PyJFuzz
+
+[![CLI](https://s18.postimg.org/qu5j9pw09/ext_fuzz.png)](https://s18.postimg.org/qu5j9pw09/ext_fuzz.png)
+
+[![CLI2](https://s11.postimg.org/qtgi9dro3/filefuzz.png)](https://s11.postimg.org/qtgi9dro3/filefuzz.png)
+
+[![CLI3](https://s15.postimg.org/7jn4ktkcb/processm.png)](https://s15.postimg.org/7jn4ktkcb/processm.png)
+
+Built-in tool
+===========
+PyJFuzz is shipped with a built-in tool called **PyJFuzz Web Fuzzer**, this tool will provide an automatic fuzzing console via HTTP and HTTPS server, it can be used to easly fuzz almost any web browser even when you can't control the process state!
+
+There are two switch used to launch this tool (--browser-auto and --fuzz-web), the first one perform automatic browser restart when a crash occur, the other one try to catch when a browser doesn't make requests anymore. Both of them always save the testcases, below some screenshots.
+
+[![FUZZ](https://s18.postimg.org/ulahts5bt/fuzzweb.png)](https://s18.postimg.org/ulahts5bt/fuzzweb.png)
+
+[![FUZZ2](https://s17.postimg.org/74s3qidrj/fuzzweb2.png)](https://s17.postimg.org/74s3qidrj/fuzzweb2.png)
+
+[![BROWSERAUTO](https://s18.postimg.org/j0t67tabt/auto.png)](https://s18.postimg.org/j0t67tabt/auto.png)
+
+[![BROWSERAUTO2](https://s15.postimg.org/qj2o5it2z/auto2.png)](https://s15.postimg.org/qj2o5it2z/auto2.png)
+Issue
+=====
+
+Please send any issue here via GitHub i'll provide a fix as soon as possible.
+
+Result
+======
+*Below a list of know issue found by PyJFuzz, the list will be updated weekly*
+
+End
+===
+
+Thanks for using PyJFuzz!
+
+***Happy Fuzzing*** from mseclab
