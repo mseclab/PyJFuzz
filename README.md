@@ -1,4 +1,5 @@
-PyJFuzz
+
+[![LOGO](https://s30.postimg.org/iolw8xqn5/logo.png)](https://s30.postimg.org/iolw8xqn5/logo.png)
 =======
 **PyJFuzz** is a small, extensible and ready-to-use framework used to **fuzz JSON inputs**, such as mobile endpoint REST API, JSON implementation, Browsers, cli executable and much more.
 
