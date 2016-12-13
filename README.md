@@ -135,8 +135,8 @@ Below a comprehensive list of all available settings / customization of PJFConfi
   </tr>
   <tr>
     <td>parameters</td>
-    <td><b>str</b></td>
-    <td>List of comma-separated parameters to fuzz  (taken from JSON object)</td>
+    <td><b>list</b>&lt;str&gt;</td>
+    <td>List of parameters to fuzz (taken from JSON object)</td>
   </tr>
   <tr>
     <td>techniques</td>

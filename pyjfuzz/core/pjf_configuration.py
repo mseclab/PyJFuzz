@@ -40,10 +40,21 @@ class PJFConfiguration(Namespace):
         Init the command line
         """
         super(PJFConfiguration, self).__init__(**arguments.__dict__)
-        if type(self.json) != dict:
-            raise PJFInvalidType(self.json, type(dict))
-        if type(self.level) != int:
-            raise PJFInvalidType(self.level, type(int))
+        if self.json:
+            if type(self.json) != dict:
+                raise PJFInvalidType(self.json, dict)
+        if self.level:
+            if type(self.level) != int:
+                raise PJFInvalidType(self.level, int)
+        if self.techniques:
+            if type(self.techniques) != str:
+                raise PJFInvalidType(self.techniques, str)
+        if self.command:
+            if type(self.command) != list:
+                raise PJFInvalidType(self.command, list)
+        if self.parameters:
+            if type(self.parameters) != str:
+                raise PJFInvalidType(self.parameters, str)
         if not self.nologo:
             sys.stderr.write("{0}\n".format(PYJFUZZ_LOGO))
         if self.recheck_ports:
