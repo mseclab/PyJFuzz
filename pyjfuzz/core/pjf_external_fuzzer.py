@@ -66,5 +66,7 @@ class PJFExternalFuzzer(PJFExecutor):
                 self.spawn(self.config.command, timeout=2)
             self.logger.debug("[{0}] - PJFExternalFuzzer successfully completed".format(time.strftime("%H:%M:%S")))
             return self._out
+        except KeyboardInterrupt:
+            return ""
         except Exception as e:
             raise PJFBaseException(e.message)

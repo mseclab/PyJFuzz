@@ -25,8 +25,8 @@ import os
 import sys
 import json
 import socket
-from conf import CONF_PATH
 from ast import literal_eval
+from conf import CONF_PATH
 from argparse import Namespace
 from pjf_version import PYJFUZZ_LOGO
 from errors import PJFInvalidType
@@ -42,7 +42,8 @@ class PJFConfiguration(Namespace):
         super(PJFConfiguration, self).__init__(**arguments.__dict__)
         if self.json:
             if type(self.json) != dict:
-                raise PJFInvalidType(self.json, dict)
+                if type(self.json) != list:
+                    raise PJFInvalidType(self.json, dict)
         if self.level:
             if type(self.level) != int:
                 raise PJFInvalidType(self.level, int)
@@ -189,7 +190,12 @@ class PJFConfiguration(Namespace):
         import argparse
         parser = argparse.ArgumentParser()
         try:
-            value = literal_eval(value)
+            try:
+                value = literal_eval(value)
+            except:
+                value = json.loads(value)
+            if type(value) not in (dict, list):
+                raise SyntaxError
         except SyntaxError:
             raise parser.error("Please insert a valid JSON value!")
         return value

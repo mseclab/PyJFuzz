@@ -25,7 +25,7 @@ import sys
 
 class PJFBaseException(Exception):
 
-    err_type = "UNKNOWN ERROR"
+    err_type = "ERROR"
 
     def __str__(self):
         self.__class__.__module__ = "[\033[91m%s\033[0m]: %s" % (self.err_type, self.message)
