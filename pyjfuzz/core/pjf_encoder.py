@@ -79,7 +79,8 @@ class PJFEncoder(object):
                 return d
 
             def decode(x):
-                return "".join(encoding % ord(c) if c not in p else c for c in x)
+                tmp = "".join(encoding % ord(c) if c not in p else c for c in x)
+                return unicode(tmp.encode("latin1").decode("unicode_escape"))
 
             def encode(x):
                 for encoded in hex_regex.findall(x):

