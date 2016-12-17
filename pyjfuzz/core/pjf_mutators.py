@@ -252,7 +252,10 @@ class PJFMutators(object):
         buf = "".join(b for b in buf)
         for character in buf:
             if character not in string.printable:
-                tmp += "\u%04x" % ord(character)
+                if not self.config.utf8 and not self.config.strong_fuzz:
+                    tmp += "\u%04x" % ord(character)
+                else:
+                    tmp += character
             else:
                 tmp += character
         return tmp
