@@ -128,6 +128,7 @@ class PJFFactory(object):
         """
         try:
             if type(element) == dict:
+                tmp_element = {}
                 for key in element:
                     if self.config.parameters:
                         if self.config.exclude_parameters:
@@ -138,11 +139,13 @@ class PJFFactory(object):
                         fuzz = True
                     if fuzz:
                         if type(element[key]) == dict:
-                            element[key] = self.fuzz_elements(element[key])
+                            tmp_element.update({key: self.fuzz_elements(element[key])})
                         elif type(element[key]) == list:
-                            element[key] = self.fuzz_elements(element[key])
+                            tmp_element.update({key: self.fuzz_elements(element[key])})
                         else:
-                            element[key] = self.mutator.fuzz(element[key])
+                            tmp_element.update({key: self.mutator.fuzz(element[key])})
+                element = tmp_element
+                del tmp_element
             elif type(element) == list:
                 arr = []
                 for key in element:

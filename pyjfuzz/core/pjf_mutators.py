@@ -141,7 +141,7 @@ class PJFMutators(object):
         numwrites=random.randrange(math.ceil((float(len(buf)) / FuzzFactor)))+1
         for j in range(numwrites):
             self.random_action(buf)
-        return "".join(buf)
+        return self.safe_join(buf)
 
     def random_action(self, b):
         action = random.choice([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
@@ -202,7 +202,7 @@ class PJFMutators(object):
                     (r"\[", r"\]"),
                     (r"\{", r"\}")
                 ])
-                b_str = "".join(b)
+                b_str = self.safe_join(b)
                 block_re = re.compile(str(".+({0}[^{2}{3}]+{1}).+").format(block[0], block[1], block[0], block[1]))
                 if block_re.search(b_str):
                     r = random.choice(block_re.findall(b_str))
@@ -215,7 +215,7 @@ class PJFMutators(object):
                             newarr = list(random_re.sub("\\1" * random.randint(1, 10), b_str, 1))
                             b[:] = newarr
             elif action == 10:
-                b_str = "".join(b)
+                b_str = self.safe_join(b)
                 limit_choice = random.choice([
                     0x7FFFFFFF,
                     -0x80000000,
@@ -228,3 +228,19 @@ class PJFMutators(object):
                     new = b_str[0:block.start()] + str(int(block.group())*limit_choice) + b_str[block.start() +
                                                                                                 len(block.group()):]
                     b[:] = list(new)
+
+    def safe_join(self, buf):
+        tmp_buf = ""
+        if not self.config.utf8:
+            for character in buf:
+                if character in string.printable:
+                    tmp_buf += character
+                else:
+                    tmp_buf += "\\u%04x" % ord(character)
+        else:
+            for character in buf:
+                if character in string.printable:
+                    tmp_buf += character
+                else:
+                    tmp_buf += "\\%02x" % ord(character)
+        return tmp_buf
