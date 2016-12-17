@@ -109,7 +109,6 @@ class PJFProcessMonitor(PJFTestcaseServer, PJFExecutor):
                 signal.signal(signal.SIGINT, self.shutdown)
             self.process = subprocess.Popen(cmdline, stdin=PIPE, stdout=PIPE, stderr=PIPE)
             while self.process and not self.finished:
-                print self.process
                 self.process.wait()
                 if self._is_sigsegv(self.process.returncode):
                     if self.config.debug:
