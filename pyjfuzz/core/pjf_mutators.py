@@ -87,7 +87,6 @@ class PJFMutators(object):
         }
 
         self.mutator = {
-            unicode: self.string_mutator,
             str: self.string_mutator,
             bool: self.boolean_mutator,
             int: self.int_mutator,
@@ -96,7 +95,7 @@ class PJFMutators(object):
         }
 
         self.polyglot_attacks = {
-            0: "jaVasCript:/*-/*\x60/*\\x60/*'/*\"/**/(/* */oNcliCk=alert() )//%%0D%%0A%%0d%%0a//</stYle/</tit"
+            0: "jaVasCript:/*-/*\x60/*\x60/*'/*\"/**/(/* */oNcliCk=alert() )//%%0D%%0A%%0d%%0a//</stYle/</tit"
                "Le/</teXtarEa/</scRipt/--!>\x3csVg/<sVg/oNloAd=alert(\%s\)//>\x3e",
             1: "SELECT 1,2,IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1))/*'XOR(IF(SUBSTR"
                "(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1)))OR'|\"XOR(IF(SUBSTR(@@version,1,1)"
@@ -127,6 +126,9 @@ class PJFMutators(object):
         """
         Get a random mutator for the given type
         """
+        if obj_type == unicode:
+            obj_type = str
+            obj = str(obj)
         return self._get_random(obj_type)(obj)
 
     def get_string_polyglot_attack(self, obj):
@@ -251,11 +253,5 @@ class PJFMutators(object):
         tmp = ""
         buf = "".join(b for b in buf)
         for character in buf:
-            if character not in string.printable:
-                if not self.config.utf8 and not self.config.strong_fuzz:
-                    tmp += "\u%04x" % ord(character)
-                else:
-                    tmp += character
-            else:
-                tmp += character
+            tmp += character
         return tmp

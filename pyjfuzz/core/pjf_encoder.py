@@ -41,6 +41,7 @@ class PJFEncoder(object):
             else:
                 encoding = "\\u%04x"
             hex_regex = re.compile(r"(\\\\x[a-fA-F0-9]{2})")
+            unicode_regex = re.compile(r"(\\u[a-fA-F0-9]{4})")
 
             def encode_decode_all(d, _decode=True):
                 if type(d) == dict:
@@ -80,7 +81,9 @@ class PJFEncoder(object):
 
             def decode(x):
                 tmp = "".join(encoding % ord(c) if c not in p else c for c in x)
-                return unicode(tmp.encode("latin1").decode("unicode_escape"))
+                for encoded in unicode_regex.findall(tmp):
+                    tmp = tmp.replace(encoded, encoded.decode("unicode_escape"))
+                return unicode(tmp)
 
             def encode(x):
                 for encoded in hex_regex.findall(x):
