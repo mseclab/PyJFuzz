@@ -193,7 +193,7 @@ class PJFWorker(object):
                 with tempfile.NamedTemporaryFile(delete=False) as temp_file:
                     temp_file.write(j_fuzz)
                     temp_file.close()
-                    setattr(self, "temp_file_name", temp_file.name)
+                    setattr(self.config, "temp_file_name", temp_file.name)
                 if self.config.debug:
                     print "[\033[92mINFO\033[0m] Generated temp file \033[91m%s\033[0m" % self.config.temp_file_name
                 result = PJFExternalFuzzer(self.config).execute_sigsegv(self.config.temp_file_name)
@@ -211,6 +211,7 @@ class PJFWorker(object):
                     t.write(j_fuzz)
                     t.close()
             else:
+                os.unlink(self.config.temp_file_name)
                 print "[\033[92mINFO\033[0m] Program exited normally"
         except Exception as e:
             raise PJFBaseException(e.message)
