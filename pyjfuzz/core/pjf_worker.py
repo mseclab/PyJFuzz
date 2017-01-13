@@ -198,6 +198,7 @@ class PJFWorker(object):
                     print "[\033[92mINFO\033[0m] Generated temp file \033[91m%s\033[0m" % self.config.temp_file_name
                 result = PJFExternalFuzzer(self.config).execute_sigsegv(self.config.temp_file_name)
             else:
+                setattr(self.config, "temp_file_name", False)
                 result = PJFExternalFuzzer(self.config).execute_sigsegv(j_fuzz)
             if result:
                 print "[\033[92mINFO\033[0m] Program crashed with \033[91mSIGSEGV\033[0m"
@@ -211,7 +212,8 @@ class PJFWorker(object):
                     t.write(j_fuzz)
                     t.close()
             else:
-                os.unlink(self.config.temp_file_name)
+                if self.config.temp_file_name:
+                    os.unlink(self.config.temp_file_name)
                 print "[\033[92mINFO\033[0m] Program exited normally"
         except Exception as e:
             raise PJFBaseException(e.message)
