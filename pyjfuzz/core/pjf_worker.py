@@ -35,6 +35,7 @@ import json
 import netifaces
 import time
 import sys
+import os
 
 class PJFWorker(object):
 
@@ -227,5 +228,8 @@ class PJFWorker(object):
             raise PJFBaseException(e.message)
 
     def update_library(self):
-        updater = PJFUpdater()
-        updater.update()
+        if os.getuid() != 0:
+            print "[\033[92mINFO\033[0m] You need to run as root!"
+        else:
+            updater = PJFUpdater()
+            updater.update()

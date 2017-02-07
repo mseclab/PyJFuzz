@@ -75,10 +75,13 @@ class PJFUpdater:
     def update(self):
         if self.need_update():
             print "[\033[92mINFO\033[0m] Found an updated version! cloning..."
+
             Repo.clone_from(self.url, self.tmp_dir)
+            os.chdir(self.tmp_dir)
             print "[\033[92mINFO\033[0m] Installing..."
             if self.install(self.new_version):
                 os.unlink(self.tmp_dir)
                 return True
-        print "[\033[92mINFO\033[0m] You've got already the last version :)"
+        else:
+            print "[\033[92mINFO\033[0m] You've got already the last version :)"
         return False
