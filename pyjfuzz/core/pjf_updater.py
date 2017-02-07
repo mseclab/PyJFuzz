@@ -60,11 +60,11 @@ class PJFUpdater:
         return False
 
     def install(self, version):
-        subprocess.Popen(["python" "{0}/setup.py", "install"]).wait()
-        proc = subprocess.Popen(["python" "-c","from pyjfuzz.lib import PYJFUZZ_VERSION; print PYJFUZZ_VERSION,"],
+        subprocess.Popen(["python", "{0}/setup.py".format(self.tmp_dir), "install"]).wait()
+        proc = subprocess.Popen(["python","-c","from pyjfuzz.lib import PYJFUZZ_VERSION; print PYJFUZZ_VERSION,"],
                                 stdout=subprocess.PIPE)
         proc.wait()
-        v = proc.stdout.read()
+        v = proc.stdout.read().replace("\n", "")
         if version == v:
             print "[\033[92mINFO\033[0m] Installation completed!"
             return True
