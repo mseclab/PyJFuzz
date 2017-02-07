@@ -81,13 +81,10 @@ class PJFUpdater:
             print "[\033[92mINFO\033[0m] Installing..."
             if self.install(self.new_version):
                 os.chdir("..")
-                os.unlink(self.tmp_dir)
+                os.rmdir(self.tmp_dir)
                 return True
-            else:
-                os.chdir("..")
-                os.unlink(self.tmp_dir)
         else:
-            os.unlink(self.tmp_dir)
             print "[\033[92mINFO\033[0m] You've got already the last version :)"
+        os.rmdir(self.tmp_dir)
         return False
 
