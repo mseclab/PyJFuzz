@@ -36,7 +36,6 @@ def get_package_data():
 
 setup(
     name="PyJFuzz",
-    version="1.1.0",
     author="Daniele Lingualossa",
     author_email="d.linguaglossa@mseclab.it",
     description="Trivial JSON fuzzer written in python",
