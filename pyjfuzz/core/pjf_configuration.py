@@ -121,7 +121,9 @@ class PJFConfiguration(Namespace):
         """
         from pjf_worker import PJFWorker
         worker = PJFWorker(self)
-        if self.browser_auto:
+        if self.update_pjf:
+            worker.update_library()
+        elif self.browser_auto:
             worker.browser_autopwn()
         elif self.fuzz_web:
             worker.web_fuzzer()

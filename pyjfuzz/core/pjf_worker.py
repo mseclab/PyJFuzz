@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from errors import PJFBaseException
+from pjf_updater import PJFUpdater
 from pjf_configuration import PJFConfiguration
 from pjf_server import PJFServer
 from pjf_factory import PJFFactory
@@ -224,3 +225,7 @@ class PJFWorker(object):
             sys.stdout.write("{0}\n".format(json.fuzzed))
         except Exception as e:
             raise PJFBaseException(e.message)
+
+    def update_library(self):
+        updater = PJFUpdater()
+        updater.update()

@@ -39,6 +39,9 @@ def main():
 
     group = parser.add_mutually_exclusive_group(required=True)
 
+    group.add_argument('--update', action='store_true', help='Check for updates, and automatically install them',
+                       default=False, required=False, dest="update_pjf")
+
     group.add_argument('--P',  metavar='PROCESS', help='Monitor process for crash', default=False, required=False,
                        dest="process_to_monitor")
     group.add_argument('--J', metavar='JSON', help='Original JSON serialized object',
