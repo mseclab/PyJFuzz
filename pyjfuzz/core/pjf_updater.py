@@ -83,7 +83,11 @@ class PJFUpdater:
                 os.chdir("..")
                 os.unlink(self.tmp_dir)
                 return True
+            else:
+                os.chdir("..")
+                os.unlink(self.tmp_dir)
         else:
+            os.unlink(self.tmp_dir)
             print "[\033[92mINFO\033[0m] You've got already the last version :)"
         return False
 
