@@ -35,7 +35,7 @@ class TestPJFServer(unittest.TestCase):
 
     def test_start_object(self):
         server = PJFServer(configuration=PJFConfiguration(Namespace(ports={"servers": {"HTTP_PORT": 8080, "HTTPS_PORT": 8443}},
-                                                   html=False, level=6, command="radamsa", stdin=True,
+                                                   html=False, level=6, command=["radamsa"], stdin=True,
                                                    json={"a": "test"}, indent=True, strong_fuzz=False, url_encode=False,
                                                    parameters=[], notify=False, debug=False, content_type="text/plain",
                                                                     utf8=False, nologo=True)))

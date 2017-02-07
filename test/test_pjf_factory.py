@@ -33,41 +33,41 @@ class TestPJFFactory(unittest.TestCase):
     def test_nested_object(self):
         self.assertTrue(PJFFactory(PJFConfiguration(Namespace(utf8=False, url_encode=False, parameters=None,
                                                               strong_fuzz=False, json={"t": 1, "foo": {"cow": True}},
-                                                              nologo=True, techniques=range(0, 14)))))
+                                                              nologo=True, techniques="CHPTRSX"))))
 
     def test_object_addition(self):
         json = PJFFactory(PJFConfiguration(Namespace(utf8=False, url_encode=False, parameters=None, strong_fuzz=False,
-                                                     json={"a": 1}, nologo=True, techniques=range(0, 14))))
+                                                     json={"a": 1}, nologo=True, techniques="CHPTRSX")))
         json += {"foo": True}
         self.assertTrue(json["foo"])
 
     def test_object_equal(self):
         json = PJFFactory(PJFConfiguration(Namespace(utf8=False, url_encode=False, parameters=None, strong_fuzz=False,
-                                                     json={"a": 1}, nologo=True, techniques=range(0, 14))))
+                                                     json={"a": 1}, nologo=True, techniques="CHPTRSX")))
         self.assertEquals(json, {"a": 1})
         self.assertNotEqual(json, {"a": 0})
 
     def test_object_contains(self):
         json = PJFFactory(PJFConfiguration(Namespace(utf8=False, url_encode=False, parameters=None, strong_fuzz=False,
-                                                     json={"a": 1}, nologo=True, techniques=range(0, 14))))
+                                                     json={"a": 1}, nologo=True, techniques="CHPTRSX")))
         self.assertTrue(["a"] in json)
         self.assertFalse(["A"] in json)
 
     def test_object_setitem(self):
         json = PJFFactory(PJFConfiguration(Namespace(utf8=False, url_encode=False, parameters=None, strong_fuzz=False,
-                                                     json={"a": False}, nologo=True, techniques=range(0, 14))))
+                                                     json={"a": False}, nologo=True, techniques="CHPTRSX")))
         json["a"] = True
         self.assertTrue(json["a"])
 
     def test_object_representation(self):
         json = PJFFactory(PJFConfiguration(Namespace(utf8=False, url_encode=False, parameters=None, strong_fuzz=False,
-                                                     json={"a": 1}, nologo=True, techniques=range(0, 14))))
+                                                     json={"a": 1}, nologo=True, techniques="CHPTRSX")))
         self.assertTrue(str(json) == "{'a': 1}")
         self.assertTrue(type(str(json)) == str)
 
     def test_object_fuzz(self):
         json = PJFFactory(PJFConfiguration(Namespace(utf8=False, url_encode=False, parameters=None, strong_fuzz=False,
-                                                     json={"a": "\xf0aaaaaaa"}, command="radamsa", stdin=True, level=6,
+                                                     json={"a": "\xf0aaaaaaa"}, command=["radamsa"], stdin=True, level=6,
                                                      indent=True, nologo=True)))
         self.assertTrue(json.fuzzed)
 
