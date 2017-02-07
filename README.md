@@ -140,8 +140,8 @@ Below a comprehensive list of all available settings / customization of PJFConfi
   </tr>
   <tr>
     <td>techniques</td>
-    <td><b>list</b>&lt;int&gt;</td>
-    <td>List of polyglot attack, used to generate fuzzed JSON, such as XSS, LFI etc. They are in the range 0-13 (Look <b>techniques table</b>)</td>
+    <td><b>str</b>&lt;int&gt;</td>
+    <td>String of enable attacks, used to generate fuzzed JSON, such as XSS, LFI etc. ie "CHPTRSX" (Look <b>techniques table</b>)</td>
   </tr>
   <tr>
     <td>level</td>
