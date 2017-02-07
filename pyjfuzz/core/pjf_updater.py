@@ -28,6 +28,7 @@ import subprocess
 import tempfile
 import urlparse
 import httplib
+import shutil
 import os
 
 class PJFUpdater:
@@ -81,10 +82,10 @@ class PJFUpdater:
             print "[\033[92mINFO\033[0m] Installing..."
             if self.install(self.new_version):
                 os.chdir("..")
-                os.rmdir(self.tmp_dir)
+                shutil.rmtree(self.tmp_dir)
                 return True
         else:
             print "[\033[92mINFO\033[0m] You've got already the last version :)"
-        os.rmdir(self.tmp_dir)
+        shutil.rmtree(self.tmp_dir)
         return False
 
