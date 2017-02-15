@@ -308,6 +308,10 @@ Result
 ======
 *Below a list of know issue found by PyJFuzz, the list will be updated weekly*
 
+- Double free in cJSON (https://github.com/DaveGamble/cJSON/issues/105)
+- Unhandled exception in picojson (https://github.com/kazuho/picojson/issues/94)
+- Memory leak in simpleJSON (https://github.com/nbsdx/SimpleJSON/issues/8)
+
 End
 ===
 
