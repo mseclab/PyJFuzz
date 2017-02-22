@@ -302,7 +302,7 @@ There are two switch used to launch this tool (--browser-auto and --fuzz-web), t
 Issue
 =====
 
-Please send any issue here via GitHub i'll provide a fix as soon as possible.
+Please send any issue here via GitHub I'll provide a fix as soon as possible.
 
 Result
 ======
@@ -311,6 +311,8 @@ Result
 - Double free in cJSON (https://github.com/DaveGamble/cJSON/issues/105)
 - Unhandled exception in picojson (https://github.com/kazuho/picojson/issues/94)
 - Memory leak in simpleJSON (https://github.com/nbsdx/SimpleJSON/issues/8)
+- Stack base buffer overflow in frozen (https://github.com/cesanta/frozen/issues/14)
+- Memory corruption with custom EIP (https://github.com/cesanta/frozen/issues/15)
 
 End
 ===
