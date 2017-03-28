@@ -203,7 +203,7 @@ class PJFWorker(object):
                 setattr(self.config, "temp_file_name", False)
                 result = PJFExternalFuzzer(self.config).execute_sigsegv(j_fuzz)
             if result:
-                print "[\033[92mINFO\033[0m] Program crashed with \033[91mSIGSEGV\033[0m/\033[91mSIGABRT\033[0m"
+                print "[\033[92mINFO\033[0m] Program crashed with \033[91mSIGSEGV\033[0m/\033[91mSIGABRT\033[0m/\033[91mSIGHUP\033[0m"
                 if self.config.debug:
                     print "[\033[92mINFO\033[0m] Saving testcase..."
                 try:

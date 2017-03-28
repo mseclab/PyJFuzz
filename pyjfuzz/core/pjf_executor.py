@@ -28,6 +28,7 @@ from subprocess import PIPE
 from pjf_logger import PJFLogger
 from select import error
 import subprocess
+import signal
 import time
 
 class PJFExecutor(object):
@@ -45,6 +46,12 @@ class PJFExecutor(object):
         self.return_code = 0
         self._in = ""
         self.logger.debug("[{0}] - PJFExecutor successfully initialized".format(time.strftime("%H:%M:%S")))
+        signal.signal(signal.SIGALRM, self.handle_alarm)
+
+    def handle_alarm(self, *args):
+        signal.alarm(0)
+        self.close()
+        self.return_code = -1
 
     def spawn(self, cmd, stdin_content="", stdin=False, shell=False, timeout=2):
         """
@@ -59,7 +66,11 @@ class PJFExecutor(object):
                 raise PJFInvalidType(type(stdin), bool)
             self._in = stdin_content
             try:
+                signal.alarm(1)
                 self.process = subprocess.Popen(cmd, stdout=PIPE, stderr=PIPE, stdin=PIPE, shell=shell)
+                self.process.wait()
+                if self.return_code == -1:
+                    return
                 self.finish_read(timeout, stdin_content, stdin)
                 if self.process.poll() is not None:
                     self.close()

@@ -48,7 +48,7 @@ class PJFExternalFuzzer(PJFExecutor):
     def execute_sigsegv(self, obj):
         self.execute(obj)
         self.logger.debug("[{0}] - PJFExternalFuzzer successfully completed".format(time.strftime("%H:%M:%S")))
-        return self.return_code in [-11, -6]
+        return self.return_code in [-11, -6, -1]
 
     def execute(self, obj):
         """
