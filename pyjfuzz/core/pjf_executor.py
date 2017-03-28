@@ -66,7 +66,7 @@ class PJFExecutor(object):
             except KeyboardInterrupt:
                 return
         except OSError:
-            raise PJFProcessExecutionError("Binary <%s> does not exists" % cmd[0])
+            raise PJFProcessExecutionError("Binary <%s> does not exist" % cmd[0])
         except Exception as e:
             raise PJFBaseException(e.message)
 
