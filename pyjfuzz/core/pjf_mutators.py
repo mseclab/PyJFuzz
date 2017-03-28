@@ -142,7 +142,7 @@ class PJFMutators(object):
         Perform the fuzzing
         """
         buf = list(obj)
-        FuzzFactor = (float(len(buf))*float(random.randint(1, 100))) / 100.0
+        FuzzFactor = random.randrange(1, len(buf))
         numwrites=random.randrange(math.ceil((float(len(buf)) / FuzzFactor)))+1
         for j in range(numwrites):
             self.random_action(buf)
