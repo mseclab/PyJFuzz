@@ -45,7 +45,10 @@ class PJFWorker(object):
     def browser_autopwn(self):
         try:
             from tools import TOOLS_DIR
-            to_fuzz = {'lvl1': {"lvl2": [1, 1.0, "True"]}, "lvl1-1": [{"none": None, "inf": [{"a": {"a": "a"}}]}]}
+            if not self.config.auto:
+                to_fuzz = {'lvl1': {"lvl2": [1, 1.0, "True"]}, "lvl1-1": [{"none": None, "inf": [{"a": {"a": "a"}}]}]}
+            else:
+                to_fuzz = self.config.generate_json(self.config.grammar_path)
             run = "{0} http://127.0.0.1:8080/fuzzer.html".format(self.config.browser_auto)
             config = PJFConfiguration(Namespace(json=to_fuzz,
                                                 html=TOOLS_DIR,
@@ -75,7 +78,10 @@ class PJFWorker(object):
     def web_fuzzer(self):
         try:
             from tools import TOOLS_DIR
-            to_fuzz = {'lvl1': {"lvl2": [1, 1.0, "True"]}, "lvl1-1": [{"none": None, "inf": [{"a": {"a": "a"}}]}]}
+            if not self.config.auto:
+                to_fuzz = {'lvl1': {"lvl2": [1, 1.0, "True"]}, "lvl1-1": [{"none": None, "inf": [{"a": {"a": "a"}}]}]}
+            else:
+                to_fuzz = self.config.generate_json(self.config.grammar_path)
             run = "{0} http://127.0.0.1:8080/fuzzer.html".format(self.config.browser_auto)
             config = PJFConfiguration(Namespace(json=to_fuzz,
                                                 html=TOOLS_DIR,

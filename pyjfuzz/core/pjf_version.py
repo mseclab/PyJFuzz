@@ -27,7 +27,7 @@ PYJFUZZ_LOGLEVEL = logging.INFO
 
 PYJFUZZ_COMPANY = 'Mobile Security Lab 2016'
 
-PYJFUZZ_VERSION = '1.1.1'
+PYJFUZZ_VERSION = '1.1.2'
 
 PYJFUZZ_AUTHOR = "Daniele 'dzonerzy' Linguaglossa"
 

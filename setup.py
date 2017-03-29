@@ -63,7 +63,8 @@ setup(
     install_requires=[
         'bottle',
         'netifaces',
-        'GitPython'
+        'GitPython',
+        'gramfuzz'
     ],
 )
 

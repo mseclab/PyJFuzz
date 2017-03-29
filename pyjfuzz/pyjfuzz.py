@@ -49,6 +49,9 @@ def main():
     group.add_argument('--F', metavar='FILE', help='Path to file', type=pjf_configuration.PJFConfiguration.valid_file,
                        default=None, dest="json_file")
 
+    group.add_argument('--auto', action='store_true', help='Automatically generate JSON init testcase', dest='auto',
+                        default=False)
+
     parser.add_argument('-p', metavar='PARAMS', help='Parameters comma separated', required=False, dest="parameters")
 
     parser.add_argument('-t', metavar='TECHNIQUES', help='Techniques "CHPTRSX"\n\n'

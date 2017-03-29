@@ -29,6 +29,8 @@ from ast import literal_eval
 from conf import CONF_PATH
 from argparse import Namespace
 from pjf_version import PYJFUZZ_LOGO
+from pjf_grammar import generate_json
+from . import GRAMMAR_PATH
 from errors import PJFInvalidType
 
 class PJFConfiguration(Namespace):
@@ -40,6 +42,8 @@ class PJFConfiguration(Namespace):
         Init the command line
         """
         super(PJFConfiguration, self).__init__(**arguments.__dict__)
+        setattr(self, "generate_json", generate_json)
+        setattr(self, "grammar_path", GRAMMAR_PATH)
         if self.json:
             if type(self.json) != dict:
                 if type(self.json) != list:
@@ -93,6 +97,8 @@ class PJFConfiguration(Namespace):
                 self.stdin = True
         if not self.parameters:
             self.parameters = []
+        if self.auto:
+            self.json = self.generate_json(self.grammar_path)
 
     def __contains__(self, items):
         if type(items) != list:
