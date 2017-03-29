@@ -56,6 +56,12 @@ class PJFInvalidArgument(PJFBaseException):
     """
     err_type = "INVALID ARGUMENT"
 
+class PJFInvalidJSON(PJFBaseException):
+    """
+    Invalid argument passed to PyJFuzz
+    """
+    err_type = "INVALID JSON"
+
 class PJFSocketError(PJFBaseException):
     """
     Socket issue
@@ -91,3 +97,12 @@ class PJFProcessExecutionError(PJFProcessError):
     """
     Error during process execution
     """
+
+class PJFMalformedJSON(PJFInvalidJSON):
+    """
+    Invalid argument passed to PyJFuzz
+    """
+    err_type = "MALFORMED JSON"
+
+    def __init__(self):
+        self.message = "Invalid JSON object"

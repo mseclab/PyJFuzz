@@ -28,10 +28,10 @@ from pjf_server import PJFServer
 from pjf_factory import PJFFactory
 from pjf_process_monitor import PJFProcessMonitor
 from pjf_external_fuzzer import PJFExternalFuzzer
+from errors import PJFMalformedJSON
 from argparse import Namespace
-from ast import literal_eval
 import tempfile
-import json
+import json as json_eval
 import netifaces
 import time
 import sys
@@ -127,23 +127,22 @@ class PJFWorker(object):
             raise PJFBaseException(e.message)
 
     def start_file_fuzz(self):
-        try:
             with open(self.config.json_file, "rb") as json_file:
-                if not self.config.strong_fuzz:
-                    setattr(self, "json", literal_eval(json_file.read()))
-                    json = PJFFactory(self.config)
-                else:
-                    try:
-                        setattr(self, "json", literal_eval(json_file.read()))
-                    except:
-                        json_file.seek(0)
-                        setattr(self, "json", json_file.read())
-                    json = PJFFactory(self.config)
-                    json_file.close()
-            with open(self.config.json_file, "wb") as json_file:
-                json_file.write(json.fuzzed)
-        except Exception as e:
-            raise PJFBaseException(e.message)
+                j = json_file.read()
+                json = None
+                try:
+                    if not self.config.strong_fuzz:
+                        setattr(self.config, "json", json_eval.loads(j))
+                        json = PJFFactory(self.config)
+                    else:
+                        setattr(self.config, "json", json_eval.loads(j))
+                        json = PJFFactory(self.config)
+                except:
+                    raise PJFMalformedJSON()
+                json_file.close()
+            if json:
+                with open(self.config.json_file, "wb") as json_file:
+                    json_file.write(json.fuzzed)
 
     def start_http_server(self):
         try:
@@ -160,7 +159,7 @@ class PJFWorker(object):
     def fuzz_command_line(self):
         try:
             with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-                temp_file.write(json.dumps(self.config.json))
+                temp_file.write(json_eval.dumps(self.config.json))
                 temp_file.close()
                 setattr(self, "temp_file_name", temp_file.name)
                 if self.config.debug:
@@ -174,7 +173,7 @@ class PJFWorker(object):
 
     def fuzz_stdin(self):
         try:
-            result = PJFExternalFuzzer(self.config).execute(json.dumps(self.config.json))
+            result = PJFExternalFuzzer(self.config).execute(json_eval.dumps(self.config.json))
             if result:
                 sys.stdout.write(result)
             else:
