@@ -37,11 +37,11 @@ class PJFMutators(object):
         self.config = configuration
         self.json_fuzzer = self.fuzz
         self.string_mutator = {
-            0: lambda x: x[::-1],
+            0: lambda x: False,
             1: lambda x: self.json_fuzzer(self.get_string_polyglot_attack(x)),
             2: lambda x: "",
             3: lambda x: [x],
-            4: lambda x: False,
+            4: lambda x: [{str(x): str(x)}],
             5: lambda x: {"param": self.json_fuzzer(self.get_string_polyglot_attack(x))},
             6: lambda x: 0,
         }
@@ -112,7 +112,8 @@ class PJFMutators(object):
             10: "||cmd.exe&&id||%s",
             11: "${7*7}a{{%s}}b",
             12: "{{'%s'*7}}",
-            13: "".join(self.random_chars[random.randint(0, 94)]
+            13: "#{%%x['%s']}+foo",
+            14: "".join(self.random_chars[random.randint(0, 94)]
                         for _ in range(0, random.randint(1, 30))).replace("%", "%%") + "%s"
         }
 

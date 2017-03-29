@@ -66,11 +66,11 @@ class PJFConfiguration(Namespace):
             self.parameters = str(self.parameters).split(",")
         if self.techniques:
             techniques = {
-                "C": [10, 5],
+                "C": [10, 5, 13],
                 "H": [9],
                 "P": [6, 2, 8],
                 "T": [11, 12],
-                "R": [13],
+                "R": [14],
                 "S": [3, 1],
                 "X": [0, 4, 7]
             }
