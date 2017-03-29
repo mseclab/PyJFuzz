@@ -32,7 +32,7 @@ Installation
 
 **Dependencies**
 
-In order to work PyJFuzz need a single dependency, **bottle**, you can install it from automatic **setup.py** installation.
+In order to work PyJFuzz need some dependency, **bottle**,**netifaces**,**GitPython** and **gramfuzz**, you can install them from automatic **setup.py** installation.
 
 **Installation**
 
