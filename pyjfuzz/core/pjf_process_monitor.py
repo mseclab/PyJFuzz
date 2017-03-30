@@ -122,7 +122,7 @@ class PJFProcessMonitor(PJFTestcaseServer, PJFExecutor):
             self.shutdown()
             self.process = False
             self.got_testcase = lambda: True
-            raise PJFProcessExecutionError("Binary <%s> does not exists" % cmdline[0])
+            raise PJFProcessExecutionError("Binary <%s> does not exist" % cmdline[0])
         except Exception as e:
             raise PJFBaseException("Unknown error please send log to author")
 
