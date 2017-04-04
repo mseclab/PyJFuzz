@@ -63,9 +63,10 @@ class PJFConfiguration(Namespace):
         if not self.nologo:
             sys.stderr.write("{0}\n".format(PYJFUZZ_LOGO))
         if self.recheck_ports:
-            with open(CONF_PATH, "rb") as config:
-                setattr(self, "ports", self.check_ports(json.loads(config.read())))
-                config.close()
+            if self.fuzz_web or self.web_server or self.browser_auto:
+                with open(CONF_PATH, "rb") as config:
+                    setattr(self, "ports", self.check_ports(json.loads(config.read())))
+                    config.close()
         if self.parameters:
             self.parameters = str(self.parameters).split(",")
         if self.techniques:
