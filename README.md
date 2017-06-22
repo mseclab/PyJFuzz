@@ -89,6 +89,26 @@ while True:
     print fuzzer.fuzzed
 ```
 
+
+*custom_techniques.py*
+```python
+from argparse import Namespace
+from pyjfuzz.lib import *
+
+# Techniques may be defined by group , or by technique number
+# groups are CHTPRSX , to understand what they are , please run pyjfuzz with -h switch or look at the command line screenshot
+# This below will initalizate a config object which use only the P group attacks where P stay for Path Traversal
+config = PJFConfiguration(Namespace(json={"test": ["1", 2, True]}, nologo=True, level=6, techniques="P"))
+# once a config object is defined you can access to config.techniques to view the selected techniques for your group
+print("Techniques IDs: {0}".format(str(config.techniques)))
+# you can eventually modify them!
+config.techniques = [2]
+# This way only attack number 2 (LFI Attack) will be performed!
+fuzzer = PJFFactory(config)
+while True:
+    print fuzzer.fuzzed
+```
+
 *simple_server.py*
 ```python
 from argparse import Namespace
