@@ -145,7 +145,7 @@ class PJFFactory(object):
                         else:
                             tmp_element.update({key: self.mutator.fuzz(element[key])})
                     else:
-                        tmp_element.update({key: element[key]})
+                        tmp_element.update({key: self.fuzz_elements(element[key])})
                 element = tmp_element
                 del tmp_element
             elif type(element) == list:
