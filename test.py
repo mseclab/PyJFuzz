@@ -32,8 +32,8 @@ from test import test_pjf_server
 from test import test_pjf_environment
 
 if __name__ == "__main__":
-    print "PyJFuzz - Test Unit"
-    print "[INFO] Starting tests...\n\n"
+    print("PyJFuzz - Test Unit")
+    print("[INFO] Starting tests...\n\n")
     test_pjf_environment.test()
     test_pjf_factory.test()
     test_pjf_mutation.test()

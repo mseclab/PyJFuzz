@@ -19,7 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from pjf_version import PYJFUZZ_LOGLEVEL
+from .pjf_version import PYJFUZZ_LOGLEVEL
 import logging
 import time
 import sys
@@ -31,12 +31,11 @@ class PJFLogger(object):
         logging.basicConfig(filename="pjf_{0}.log".format(time.strftime("%d_%m_%Y")), level=PYJFUZZ_LOGLEVEL)
         logger = logging.getLogger(__name__)
         sys.tracebacklimit = 10
+
         def handle_exception(exc_type, exc_value, exc_traceback):
             if issubclass(exc_type, KeyboardInterrupt):
                 sys.__excepthook__(exc_type, exc_value, exc_traceback)
                 return
-            a = exc_value
-            print a
             logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
             sys.__excepthook__(exc_type, exc_value, None)
             return

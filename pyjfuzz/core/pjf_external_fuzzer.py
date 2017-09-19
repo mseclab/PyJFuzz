@@ -21,8 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from pjf_executor import PJFExecutor
-from errors import PJFMissingArgument, PJFBaseException
+from .pjf_executor import PJFExecutor
+from .errors import PJFMissingArgument, PJFBaseException
 import time
 
 
@@ -69,4 +69,4 @@ class PJFExternalFuzzer(PJFExecutor):
         except KeyboardInterrupt:
             return ""
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))

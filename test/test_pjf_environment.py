@@ -35,9 +35,9 @@ class TestEnvironment(unittest.TestCase):
         self.assertTrue(True)
 
 def test():
-    print "=" * len(__TITLE__)
-    print __TITLE__
-    print "=" * len(__TITLE__)
+    print("=" * len(__TITLE__))
+    print(__TITLE__)
+    print("=" * len(__TITLE__))
     suite = unittest.TestLoader().loadTestsFromTestCase(TestEnvironment)
     unittest.TextTestRunner(verbosity=2).run(suite)
 

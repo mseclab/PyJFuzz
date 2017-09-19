@@ -28,6 +28,8 @@ class PJFBaseException(Exception):
     err_type = "ERROR"
 
     def __str__(self):
+        if not hasattr(self,"message"):
+            self.message = self.args[0]
         self.__class__.__module__ = "[\033[91m%s\033[0m]: %s" % (self.err_type, self.message)
         self.__class__.__name__ = ""
         return ""

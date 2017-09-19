@@ -26,6 +26,11 @@ import string
 import re
 import struct
 import math
+import sys
+
+if sys.version_info >= (3, 0):
+    unicode = str
+
 
 class PJFMutators(object):
     """
@@ -199,6 +204,8 @@ class PJFMutators(object):
                     s = op[action](b[pos], n) % 0xffffff
                 val = struct.pack(f, s)
                 for v in val:
+                    if isinstance(v, int):
+                        v = chr(v)
                     b[pos] = v
                     pos += 1
             elif action == 6:

@@ -56,9 +56,9 @@ class TestPJFMutation(unittest.TestCase):
             raise Exception
 
 def test():
-    print "=" * len(__TITLE__)
-    print __TITLE__
-    print "=" * len(__TITLE__)
+    print("=" * len(__TITLE__))
+    print(__TITLE__)
+    print("=" * len(__TITLE__))
     suite = unittest.TestLoader().loadTestsFromTestCase(TestPJFMutation)
     unittest.TextTestRunner(verbosity=2).run(suite)
 

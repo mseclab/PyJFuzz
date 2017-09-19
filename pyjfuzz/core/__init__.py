@@ -24,4 +24,4 @@ SOFTWARE.
 import os
 
 ROOT_PATH = "".join(x for x in __path__)
-GRAMMAR_PATH = "".join(x for x in __path__+ [os.sep, "pjf_grammar.py"])
+GRAMMAR_PATH = "".join(x for x in __path__+ [os.sep, "pjf_jsongrammar.py"])

@@ -24,17 +24,18 @@ SOFTWARE.
 
 from wsgiref.simple_server import make_server, WSGIRequestHandler
 from bottle import route, run, ServerAdapter, response, request, static_file
-from pjf_testcase_server import PJFTestcaseServer
-from errors import PJFBaseException
-from errors import PJFMissingArgument
+from .pjf_testcase_server import PJFTestcaseServer
+from .errors import PJFBaseException
+from .errors import PJFMissingArgument
 from threading import Thread
-from pjf_logger import PJFLogger
-from pjf_factory import PJFFactory
-from certs import CERT_PATH
+from .pjf_logger import PJFLogger
+from .pjf_factory import PJFFactory
+from .certs import CERT_PATH
 import multiprocessing
 import signal
 import time
 import ssl
+import sys
 import os
 import socket
 
@@ -82,10 +83,10 @@ class PJFServer:
         if ["debug", "html", "content_type", "notify", "ports"] not in configuration:
             raise PJFMissingArgument()
         if configuration.debug:
-            print "[\033[92mINFO\033[0m] Starting HTTP ({0}) and HTTPS ({1}) built-in server...".format(
+            print("[\033[92mINFO\033[0m] Starting HTTP ({0}) and HTTPS ({1}) built-in server...".format(
                 configuration.ports["servers"]["HTTP_PORT"],
                 configuration.ports["servers"]["HTTPS_PORT"]
-            )
+            ))
         if not configuration.content_type:
             configuration.content_type = False
         if not configuration.content_type:
@@ -116,7 +117,7 @@ class PJFServer:
         try:
             count = 0
             dir_name = "testcase_{0}".format(ip)
-            print "[\033[92mINFO\033[0m] Client {0} seems to not respond anymore, saving testcases".format(ip)
+            print("[\033[92mINFO\033[0m] Client {0} seems to not respond anymore, saving testcases".format(ip))
             try:
                 os.mkdir(dir_name)
             except OSError:
@@ -127,7 +128,7 @@ class PJFServer:
                     t.close()
                     count += 1
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
     def request_pool(self):
         try:
@@ -150,12 +151,12 @@ class PJFServer:
                                 clients[client[0]]["testcases"].append(client[1])
                 except:
                     pass
-                for c in clients.keys():
+                for c in list(clients.keys()):
                     if time.time() - clients[c]["timestamp"] >= 30:
                         self.save_testcase(c, clients[c]["testcases"])
                         del clients[c]
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
 
     def stop(self):
@@ -179,7 +180,7 @@ class PJFServer:
             response.headers.append("Content-Type", "text/html")
             return static_file(filepath, root=self.config.html)
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
     def serve(self):
         """
@@ -196,7 +197,7 @@ class PJFServer:
                 PJFTestcaseServer.send_testcase(fuzzed, '127.0.0.1', self.config.ports["servers"]["TCASE_PORT"])
             yield fuzzed
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
     def init_logger(self):
         """
@@ -208,5 +209,9 @@ class PJFServer:
         """
         Fix default socket lib to handle client disconnection while receiving data (Broken pipe)
         """
-        from patch.socket import socket as patch
-        socket.socket = patch
+        if sys.version_info >= (3, 0):
+            # No patch for python >= 3.0
+            pass
+        else:
+            from .patch.socket import socket as patch
+            socket.socket = patch

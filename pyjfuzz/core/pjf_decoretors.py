@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from pjf_mutators import PJFMutators
+from .pjf_mutators import PJFMutators
 
 class PJFDecorators(object):
     """

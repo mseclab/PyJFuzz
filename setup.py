@@ -21,18 +21,42 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+import subprocess
 from setuptools import setup
-import commands
+from glob import glob
+import sys
 import os
+
+
+def find_all_files_in_subdir(start_dir):
+    files = []
+    pattern = "*.*"
+    for dir,_,_ in os.walk(start_dir):
+        files.extend(glob(os.path.join(dir,pattern)))
+    return files
 
 def get_package_data():
     data = ['core/certs/server.pem', 'core/conf/config.json']
     cur_dir = os.getcwd()
     os.chdir("pyjfuzz")
-    data.extend(commands.getoutput("find core/tools -name \"*.*\"").split("\n"))
+    data.extend(find_all_files_in_subdir("core/tools"))
     os.chdir(cur_dir)
     return data
 
+def install_gramfuzz():
+    cur_dir = os.getcwd()
+    os.chdir("gramfuzz")
+    subprocess.Popen(["python3" ,os.getcwd()+os.sep+"setup.py", "install"]).wait()
+    os.chdir(cur_dir)
+
+install_gramfuzz()
+
+
+requires=['bottle', 'GitPython']
+
+if sys.version_info < (2, 7):
+    # support for python 2.6
+    requires.append('argparse')
 
 setup(
     name="PyJFuzz",
@@ -57,11 +81,6 @@ setup(
                 'pjf=pyjfuzz.pyjfuzz:main',
             ],
     },
-    install_requires=[
-        'bottle',
-        'netifaces',
-        'GitPython',
-        'gramfuzz'
-    ],
+    install_requires=requires,
 )
 

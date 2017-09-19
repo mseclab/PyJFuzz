@@ -50,8 +50,8 @@ class TestPJFExternalFuzzer(unittest.TestCase):
         os.unlink("test.json")
 
 def test():
-    print "=" * len(__TITLE__)
-    print __TITLE__
-    print "=" * len(__TITLE__)
+    print("=" * len(__TITLE__))
+    print(__TITLE__)
+    print("=" * len(__TITLE__))
     suite = unittest.TestLoader().loadTestsFromTestCase(TestPJFExternalFuzzer)
     unittest.TextTestRunner(verbosity=2).run(suite)

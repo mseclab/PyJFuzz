@@ -26,12 +26,12 @@ import sys
 import json
 import socket
 from ast import literal_eval
-from conf import CONF_PATH
+from .conf import CONF_PATH
 from argparse import Namespace
-from pjf_version import PYJFUZZ_LOGO
-from pjf_grammar import generate_json
+from .pjf_version import PYJFUZZ_LOGO
+from .pjf_grammar import generate_json
 from . import GRAMMAR_PATH
-from errors import PJFInvalidType
+from .errors import PJFInvalidType
 
 class PJFConfiguration(Namespace):
     """
@@ -85,7 +85,7 @@ class PJFConfiguration(Namespace):
                     temp += techniques[str(technique)]
             self.techniques = temp
         else:
-            self.techniques = range(0, 14)
+            self.techniques = list(range(0, 14))
         if not self.utf8:
             self.utf8 = False
         if not self.command:
@@ -126,7 +126,7 @@ class PJFConfiguration(Namespace):
         """
         Parse the command line and start PyJFuzz
         """
-        from pjf_worker import PJFWorker
+        from .pjf_worker import PJFWorker
         worker = PJFWorker(self)
         if self.update_pjf:
             worker.update_library()
@@ -162,8 +162,8 @@ class PJFConfiguration(Namespace):
                     p_checker.close()
                 except socket.error as e:
                     if e.errno == 48:
-                        print "[\033[92mINFO\033[0m] Port %s is already in use switching to different port" % \
-                              ports["servers"][p]
+                        print("[\033[92mINFO\033[0m] Port %s is already in use switching to different port" %
+                              ports["servers"][p])
                         ports["servers"][p] = self.get_free_port()
             return ports
 

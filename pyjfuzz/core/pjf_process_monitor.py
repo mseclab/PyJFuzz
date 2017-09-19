@@ -27,9 +27,9 @@ import subprocess
 import signal
 import shlex
 from subprocess import PIPE
-from pjf_executor import PJFExecutor
-from pjf_testcase_server import PJFTestcaseServer
-from errors import PJFMissingArgument ,PJFBaseException, PJFProcessExecutionError
+from .pjf_executor import PJFExecutor
+from .pjf_testcase_server import PJFTestcaseServer
+from .errors import PJFMissingArgument ,PJFBaseException, PJFProcessExecutionError
 
 class PJFProcessMonitor(PJFTestcaseServer, PJFExecutor):
     """ Represent a class used to start and monitor a single process """
@@ -46,10 +46,10 @@ class PJFProcessMonitor(PJFTestcaseServer, PJFExecutor):
         self.finished = False
         self.testcase_count = 0
         if self.config.debug:
-            print "[\033[92mINFO\033[0m] Starting process monitoring..."
-            print "[\033[92mINFO\033[0m] Starting Testcase Server ({0})...".format(
+            print("[\033[92mINFO\033[0m] Starting process monitoring...")
+            print("[\033[92mINFO\033[0m] Starting Testcase Server ({0})...".format(
                 self.config.ports["servers"]["TCASE_PORT"]
-            )
+            ))
         super(PJFProcessMonitor, self).__init__(configuration)
         self.logger.debug("[{0}] - PJFProcessMonitor successfully completed".format(time.strftime("%H:%M:%S")))
 
@@ -68,7 +68,7 @@ class PJFProcessMonitor(PJFTestcaseServer, PJFExecutor):
             self.send_testcase('', '127.0.0.1', self.config.ports["servers"]["TCASE_PORT"])
             self.logger.debug("[{0}] - PJFProcessMonitor successfully completed".format(time.strftime("%H:%M:%S")))
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
     def save_testcase(self, testcase):
         """
@@ -76,7 +76,7 @@ class PJFProcessMonitor(PJFTestcaseServer, PJFExecutor):
         """
         try:
             if self.config.debug:
-                print "[\033[92mINFO\033[0m] Saving testcase..."
+                print("[\033[92mINFO\033[0m] Saving testcase...")
             dir_name = "testcase_{0}".format(os.path.basename(shlex.split(self.config.process_to_monitor)[0]))
             try:
                 os.mkdir(dir_name)
@@ -88,7 +88,7 @@ class PJFProcessMonitor(PJFTestcaseServer, PJFExecutor):
                     t.close()
                 self.testcase_count += 1
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
     def run_and_monitor(self):
         """
@@ -112,7 +112,7 @@ class PJFProcessMonitor(PJFTestcaseServer, PJFExecutor):
                 self.process.wait()
                 if self._is_sigsegv(self.process.returncode):
                     if self.config.debug:
-                        print "[\033[92mINFO\033[0m] Process crashed with \033[91mSIGSEGV\033[0m, waiting for testcase..."
+                        print("[\033[92mINFO\033[0m] Process crashed with \033[91mSIGSEGV\033[0m, waiting for testcase...")
                     while not self.got_testcase():
                         time.sleep(1)
                     self.save_testcase(self.testcase[-10:])  # just take last 10 testcases

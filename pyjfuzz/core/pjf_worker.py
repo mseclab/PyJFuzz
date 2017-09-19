@@ -21,18 +21,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from errors import PJFBaseException
-from pjf_updater import PJFUpdater
-from pjf_configuration import PJFConfiguration
-from pjf_server import PJFServer
-from pjf_factory import PJFFactory
-from pjf_process_monitor import PJFProcessMonitor
-from pjf_external_fuzzer import PJFExternalFuzzer
-from errors import PJFMalformedJSON
+from .errors import PJFBaseException
+from .pjf_updater import PJFUpdater
+from .pjf_configuration import PJFConfiguration
+from .pjf_server import PJFServer
+from .pjf_factory import PJFFactory
+from .pjf_process_monitor import PJFProcessMonitor
+from .pjf_external_fuzzer import PJFExternalFuzzer
+from .errors import PJFMalformedJSON
 from argparse import Namespace
+import socket
 import tempfile
 import json as json_eval
-import netifaces
 import time
 import sys
 import os
@@ -44,7 +44,7 @@ class PJFWorker(object):
 
     def browser_autopwn(self):
         try:
-            from tools import TOOLS_DIR
+            from .tools import TOOLS_DIR
             if not self.config.auto:
                 to_fuzz = {'lvl1': {"lvl2": [1, 1.0, "True"]}, "lvl1-1": [{"none": None, "inf": [{"a": {"a": "a"}}]}]}
             else:
@@ -73,11 +73,11 @@ class PJFWorker(object):
                 monitor.shutdown()
                 server.stop()
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
     def web_fuzzer(self):
         try:
-            from tools import TOOLS_DIR
+            from .tools import TOOLS_DIR
             if not self.config.auto:
                 to_fuzz = {'lvl1': {"lvl2": [1, 1.0, "True"]}, "lvl1-1": [{"none": None, "inf": [{"a": {"a": "a"}}]}]}
             else:
@@ -99,32 +99,31 @@ class PJFWorker(object):
                                                 recheck_ports=False))
             server = PJFServer(config)
             server.run()
-            print "[\033[92mINFO\033[0m] Available URLs"
+            print("[\033[92mINFO\033[0m] Available URLs")
             for url in self.get_urls():
-                print "[\033[92m*\033[0m] {0}".format(url)
+                print("[\033[92m*\033[0m] {0}".format(url))
             try:
                 while True:
                         time.sleep(1)
             except KeyboardInterrupt:
                 server.stop()
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
     def get_urls(self):
         try:
-            for iface in netifaces.interfaces():
-                net = netifaces.ifaddresses(iface)
-                if netifaces.AF_INET in net:
-                    yield "http://{0}:{1}/fuzzer.html".format(net[netifaces.AF_INET][0]['addr'],
-                                                              self.config.ports["servers"]["HTTP_PORT"])
+            ip = ([l for l in ([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not
+            ip.startswith("127.")][:1], [[(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in
+                                          [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) if l][0][0])
+            yield "http://{0}:{1}/fuzzer.html".format(ip,self.config.ports["servers"]["HTTP_PORT"])
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
     def start_process_monitor(self):
         try:
             PJFProcessMonitor(self.config).start_monitor()
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
     def start_file_fuzz(self):
             with open(self.config.json_file, "rb") as json_file:
@@ -154,7 +153,7 @@ class PJFWorker(object):
             except KeyboardInterrupt:
                 server.stop()
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
     def fuzz_command_line(self):
         try:
@@ -163,23 +162,26 @@ class PJFWorker(object):
                 temp_file.close()
                 setattr(self, "temp_file_name", temp_file.name)
                 if self.config.debug:
-                    print "[\033[92mINFO\033[0m] Generated temp file \033[91m%s\033[0m" % self.config.temp_file_name
+                    print("[\033[92mINFO\033[0m] Generated temp file \033[91m%s\033[0m" % self.config.temp_file_name)
             result = PJFExternalFuzzer(self.config).execute(self.config.temp_file_name)
             with open(self.config.temp_file_name, "wb") as fuzzed:
                 fuzzed.write(result)
                 fuzzed.close()
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
     def fuzz_stdin(self):
         try:
             result = PJFExternalFuzzer(self.config).execute(json_eval.dumps(self.config.json))
             if result:
-                sys.stdout.write(result)
+                if isinstance(result, bytes):
+                    sys.stdout.write(result.decode("unicode_escape"))
+                else:
+                    sys.stdout.write(result)
             else:
                 self.fuzz()
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
     def fuzz_external(self, stdin_input=False):
         try:
@@ -202,15 +204,15 @@ class PJFWorker(object):
                     temp_file.close()
                     setattr(self.config, "temp_file_name", temp_file.name)
                 if self.config.debug:
-                    print "[\033[92mINFO\033[0m] Generated temp file \033[91m%s\033[0m" % self.config.temp_file_name
+                    print("[\033[92mINFO\033[0m] Generated temp file \033[91m%s\033[0m" % self.config.temp_file_name)
                 result = PJFExternalFuzzer(self.config).execute_sigsegv(self.config.temp_file_name)
             else:
                 setattr(self.config, "temp_file_name", False)
                 result = PJFExternalFuzzer(self.config).execute_sigsegv(j_fuzz)
             if result:
-                print "[\033[92mINFO\033[0m] Program crashed with \033[91mSIGSEGV\033[0m/\033[91mSIGABRT\033[0m/\033[91mSIGHUP\033[0m"
+                print("[\033[92mINFO\033[0m] Program crashed with \033[91mSIGSEGV\033[0m/\033[91mSIGABRT\033[0m/\033[91mSIGHUP\033[0m")
                 if self.config.debug:
-                    print "[\033[92mINFO\033[0m] Saving testcase..."
+                    print("[\033[92mINFO\033[0m] Saving testcase...")
                 try:
                     os.mkdir(dir_name)
                 except OSError:
@@ -221,20 +223,20 @@ class PJFWorker(object):
             else:
                 if self.config.temp_file_name:
                     os.unlink(self.config.temp_file_name)
-                print "[\033[92mINFO\033[0m] Program exited normally"
+                print("[\033[92mINFO\033[0m] Program exited normally")
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
     def fuzz(self):
         try:
             json = PJFFactory(self.config)
             sys.stdout.write("{0}\n".format(json.fuzzed))
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
     def update_library(self):
         if os.getuid() != 0:
-            print "[\033[92mINFO\033[0m] You need to run as root!"
+            print("[\033[92mINFO\033[0m] You need to run as root!")
         else:
             updater = PJFUpdater()
             updater.update()

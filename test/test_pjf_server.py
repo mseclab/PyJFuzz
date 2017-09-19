@@ -53,9 +53,9 @@ class TestPJFServer(unittest.TestCase):
 
 
 def test():
-    print "=" * len(__TITLE__)
-    print __TITLE__
-    print "=" * len(__TITLE__)
+    print("=" * len(__TITLE__))
+    print(__TITLE__)
+    print("=" * len(__TITLE__))
     suite = unittest.TestLoader().loadTestsFromTestCase(TestPJFServer)
     unittest.TextTestRunner(verbosity=2).run(suite)
 

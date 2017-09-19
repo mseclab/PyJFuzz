@@ -22,14 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from errors import PJFInvalidType, PJFProcessExecutionError, PJFBaseException
+from .errors import PJFInvalidType, PJFProcessExecutionError, PJFBaseException
 from threading import Thread
 from subprocess import PIPE
-from pjf_logger import PJFLogger
+from .pjf_logger import PJFLogger
 from select import error
 import subprocess
 import signal
 import time
+import sys
 
 class PJFExecutor(object):
     """
@@ -69,7 +70,7 @@ class PJFExecutor(object):
         except OSError:
             raise PJFProcessExecutionError("Binary <%s> does not exist" % cmd[0])
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
     def get_output(self, stdin_content, stdin):
         """
@@ -77,7 +78,10 @@ class PJFExecutor(object):
         """
         try:
             if stdin:
-                self.process.stdin.write(stdin_content)
+                if sys.version_info >= (3, 0):
+                    self.process.stdin.write(bytes(stdin_content, "utf-8"))
+                else:
+                    self.process.stdin.write(stdin_content)
             self._out = self.process.communicate()[0]
         except (error, IOError):
             self._out = self._in

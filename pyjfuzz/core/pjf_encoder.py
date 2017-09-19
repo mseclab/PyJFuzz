@@ -23,6 +23,7 @@ SOFTWARE.
 """
 from string import printable as p
 import json
+import sys
 import re
 
 class PJFEncoder(object):
@@ -81,13 +82,19 @@ class PJFEncoder(object):
 
             def decode(x):
                 tmp = "".join(encoding % ord(c) if c not in p else c for c in x)
-                for encoded in unicode_regex.findall(tmp):
-                    tmp = tmp.replace(encoded, encoded.decode("unicode_escape"))
-                return unicode(tmp)
+                if sys.version_info >= (3, 0):
+                    return str(tmp)
+                else:
+                    for encoded in unicode_regex.findall(tmp):
+                        tmp = tmp.replace(encoded, encoded.decode("unicode_escape"))
+                    return unicode(tmp)
 
             def encode(x):
                 for encoded in hex_regex.findall(x):
-                    x = x.replace(encoded, str(encoded).replace("\\\\x", "\\x").decode("string_escape"))
+                    if sys.version_info >= (3, 0):
+                        x = x.replace(encoded, bytes(str(encoded).replace("\\\\x", "\\x"),"utf-8").decode("unicode_escape"))
+                    else:
+                        x = x.replace(encoded, str(encoded).replace("\\\\x", "\\x").decode("string_escape"))
                 return x
 
             if indent:

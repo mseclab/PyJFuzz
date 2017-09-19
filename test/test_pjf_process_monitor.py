@@ -49,9 +49,9 @@ class TestPJFProcessMonitor(unittest.TestCase):
         self.assertTrue(crash)
 
 def test():
-    print "=" * len(__TITLE__)
-    print __TITLE__
-    print "=" * len(__TITLE__)
+    print("=" * len(__TITLE__))
+    print(__TITLE__)
+    print("=" * len(__TITLE__))
     suite = unittest.TestLoader().loadTestsFromTestCase(TestPJFProcessMonitor)
     unittest.TextTestRunner(verbosity=2).run(suite)
 

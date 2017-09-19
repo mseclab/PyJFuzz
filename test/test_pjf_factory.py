@@ -73,9 +73,9 @@ class TestPJFFactory(unittest.TestCase):
 
 
 def test():
-    print "=" * len(__TITLE__)
-    print __TITLE__
-    print "=" * len(__TITLE__)
+    print("=" * len(__TITLE__))
+    print(__TITLE__)
+    print("=" * len(__TITLE__))
     suite = unittest.TestLoader().loadTestsFromTestCase(TestPJFFactory)
     unittest.TextTestRunner(verbosity=2).run(suite)
 

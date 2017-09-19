@@ -26,8 +26,8 @@ import time
 import threading
 import struct
 import socket
-from pjf_logger import PJFLogger
-from errors import PJFMissingArgument, PJFBaseException, PJFSocketError
+from .pjf_logger import PJFLogger
+from .errors import PJFMissingArgument, PJFBaseException, PJFSocketError
 
 
 class PJFTestcaseServer(object):
@@ -59,7 +59,7 @@ class PJFTestcaseServer(object):
             self.testcase.append(data)
             sock.close()
         except socket.error as e:
-            raise PJFSocketError(e.message)
+            raise PJFSocketError(e.message if hasattr(e, "message") else str(e))
         except Exception as e:
             raise  PJFBaseException(e.message)
 
@@ -128,6 +128,6 @@ class PJFTestcaseServer(object):
             except socket.error:
                 return False
         except socket.error as e:
-            raise PJFSocketError(e.message)
+            raise PJFSocketError(e.message if hasattr(e, "message") else str(e))
         except Exception as e:
             raise  PJFBaseException(e.message)

@@ -21,14 +21,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from errors import PJFInvalidType, PJFMissingArgument, PJFBaseException
-from pjf_mutators import PJFMutators
-from pjf_mutation import PJFMutation
-from pjf_encoder import PJFEncoder
-from pjf_logger import PJFLogger
+from .errors import PJFInvalidType, PJFMissingArgument, PJFBaseException
+from .pjf_mutators import PJFMutators
+from .pjf_mutation import PJFMutation
+from .pjf_encoder import PJFEncoder
+from .pjf_logger import PJFLogger
 import time
 import json
-import urllib
+import sys
+if sys.version_info >= (3, 0):
+    import urllib.request, urllib.parse, urllib.error
+else:
+    import urllib
 
 class PJFFactory(object):
 
@@ -114,7 +118,7 @@ class PJFFactory(object):
                         ret += 1
             return len(items) == ret
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
     def __repr__(self):
         """
@@ -160,7 +164,7 @@ class PJFFactory(object):
                 element = arr
                 del arr
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
         return element
 
     def init_logger(self):
@@ -178,7 +182,10 @@ class PJFFactory(object):
             if self.config.strong_fuzz:
                 fuzzer = PJFMutators(self.config)
                 if self.config.url_encode:
-                    return urllib.quote(fuzzer.fuzz(json.dumps(self.config.json)))
+                    if sys.version_info >= (3, 0):
+                        return urllib.parse.quote(fuzzer.fuzz(json.dumps(self.config.json)))
+                    else:
+                        return urllib.quote(fuzzer.fuzz(json.dumps(self.config.json)))
                 else:
                     if type(self.config.json) in [list, dict]:
                         return fuzzer.fuzz(json.dumps(self.config.json))
@@ -186,11 +193,14 @@ class PJFFactory(object):
                         return fuzzer.fuzz(self.config.json)
             else:
                 if self.config.url_encode:
-                    return urllib.quote(self.get_fuzzed(self.config.indent, self.config.utf8))
+                    if sys.version_info >= (3, 0):
+                        return urllib.parse.quote(self.get_fuzzed(self.config.indent, self.config.utf8))
+                    else:
+                        return urllib.quote(self.get_fuzzed(self.config.indent, self.config.utf8))
                 else:
                     return self.get_fuzzed(self.config.indent, self.config.utf8)
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
 
     @PJFEncoder.json_encode
     def get_fuzzed(self, indent=False, utf8=False):
@@ -203,4 +213,4 @@ class PJFFactory(object):
             else:
                 return self.fuzz_elements(dict(self.json))
         except Exception as e:
-            raise PJFBaseException(e.message)
+            raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
