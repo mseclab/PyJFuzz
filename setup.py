@@ -46,7 +46,7 @@ def get_package_data():
 def install_gramfuzz():
     cur_dir = os.getcwd()
     os.chdir("gramfuzz")
-    subprocess.Popen(["python3" ,os.getcwd()+os.sep+"setup.py", "install"]).wait()
+    subprocess.Popen(["python" ,os.getcwd()+os.sep+"setup.py", "install"]).wait()
     os.chdir(cur_dir)
 
 install_gramfuzz()
