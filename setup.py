@@ -57,6 +57,7 @@ requires=['bottle', 'GitPython']
 if sys.version_info < (2, 7):
     # support for python 2.6
     requires.append('argparse')
+    requires.append('unittest2')
 
 setup(
     name="PyJFuzz",

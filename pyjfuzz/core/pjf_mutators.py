@@ -96,6 +96,7 @@ class PJFMutators(object):
             bool: self.boolean_mutator,
             int: self.int_mutator,
             float: self.float_mutator,
+            long: self.int_mutator,
             type(None): self.null_mutator,
         }
 
