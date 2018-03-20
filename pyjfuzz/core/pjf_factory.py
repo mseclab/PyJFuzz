@@ -141,8 +141,6 @@ class PJFFactory(object):
                             fuzz = key in self.config.parameters
                     else:
                         fuzz = True
-                    print(key, self.config.parameters)
-                    print(key in self.config.parameters)
                     if fuzz:
                         if type(element[key]) == dict:
                             tmp_element.update({key: self.fuzz_elements(element[key])})
