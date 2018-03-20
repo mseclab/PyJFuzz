@@ -134,13 +134,15 @@ class PJFFactory(object):
             if type(element) == dict:
                 tmp_element = {}
                 for key in element:
-                    if self.config.parameters:
+                    if len(self.config.parameters) > 0:
                         if self.config.exclude_parameters:
                             fuzz = key not in self.config.parameters
                         else:
                             fuzz = key in self.config.parameters
                     else:
                         fuzz = True
+                    print(key, self.config.parameters)
+                    print(key in self.config.parameters)
                     if fuzz:
                         if type(element[key]) == dict:
                             tmp_element.update({key: self.fuzz_elements(element[key])})
@@ -153,16 +155,17 @@ class PJFFactory(object):
                 element = tmp_element
                 del tmp_element
             elif type(element) == list:
-                arr = []
-                for key in element:
-                    if type(key) == dict:
-                        arr.append(self.fuzz_elements(key))
-                    elif type(key) == list:
-                        arr.append(self.fuzz_elements(key))
-                    else:
-                        arr.append(self.mutator.fuzz(key))
-                element = arr
-                del arr
+                if len(self.config.parameters) < 0:
+                    arr = []
+                    for key in element:
+                        if type(key) == dict:
+                            arr.append(self.fuzz_elements(key))
+                        elif type(key) == list:
+                            arr.append(self.fuzz_elements(key))
+                        else:
+                            arr.append(self.mutator.fuzz(key))
+                    element = arr
+                    del arr
         except Exception as e:
             raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
         return element
