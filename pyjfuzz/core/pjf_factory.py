@@ -153,7 +153,7 @@ class PJFFactory(object):
                 element = tmp_element
                 del tmp_element
             elif type(element) == list:
-                if len(self.config.parameters) < 0:
+                if len(self.config.parameters) <= 0:
                     arr = []
                     for key in element:
                         if type(key) == dict:
