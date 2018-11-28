@@ -33,14 +33,4 @@ class PJFLogger(object):
         filehandler = logging.FileHandler("pjf_{0}.log".format(time.strftime("%d_%m_%Y")))
         logger.addHandler(filehandler)
         sys.tracebacklimit = 10
-
-        def handle_exception(exc_type, exc_value, exc_traceback):
-            if issubclass(exc_type, KeyboardInterrupt):
-                sys.__excepthook__(exc_type, exc_value, exc_traceback)
-                return
-            logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
-            sys.__excepthook__(exc_type, exc_value, None)
-            return
-
-        sys.excepthook = handle_exception
         return logger
