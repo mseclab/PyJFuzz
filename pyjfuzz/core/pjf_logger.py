@@ -28,8 +28,10 @@ class PJFLogger(object):
 
     @staticmethod
     def init_logger():
-        logging.basicConfig(filename="pjf_{0}.log".format(time.strftime("%d_%m_%Y")), level=PYJFUZZ_LOGLEVEL)
         logger = logging.getLogger(__name__)
+        logger.setLevel(level=PYJFUZZ_LOGLEVEL)
+        filehandler = logging.FileHandler("pjf_{0}.log".format(time.strftime("%d_%m_%Y")))
+        logger.addHandler(filehandler)
         sys.tracebacklimit = 10
 
         def handle_exception(exc_type, exc_value, exc_traceback):
