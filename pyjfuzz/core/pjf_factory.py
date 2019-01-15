@@ -153,17 +153,16 @@ class PJFFactory(object):
                 element = tmp_element
                 del tmp_element
             elif type(element) == list:
-                if len(self.config.parameters) <= 0:
-                    arr = []
-                    for key in element:
-                        if type(key) == dict:
-                            arr.append(self.fuzz_elements(key))
-                        elif type(key) == list:
-                            arr.append(self.fuzz_elements(key))
-                        else:
-                            arr.append(self.mutator.fuzz(key))
-                    element = arr
-                    del arr
+                arr = []
+                for key in element:
+                    if type(key) == dict:
+                        arr.append(self.fuzz_elements(key))
+                    elif type(key) == list:
+                        arr.append(self.fuzz_elements(key))
+                    else:
+                        arr.append(self.mutator.fuzz(key))
+                element = arr
+                del arr
         except Exception as e:
             raise PJFBaseException(e.message if hasattr(e, "message") else str(e))
         return element
