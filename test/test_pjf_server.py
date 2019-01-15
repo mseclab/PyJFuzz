@@ -23,6 +23,7 @@ SOFTWARE.
 """
 from pyjfuzz.core.pjf_configuration import PJFConfiguration
 from argparse import Namespace
+import time
 import unittest
 import urllib2
 
@@ -40,6 +41,7 @@ class TestPJFServer(unittest.TestCase):
                                                    parameters=[], notify=False, debug=False, content_type="text/plain",
                                                                     utf8=False, nologo=True)))
         server.run()
+        time.sleep(2)
         json_http = urllib2.urlopen("http://127.0.0.1:8080").read()
         try:
             import requests
