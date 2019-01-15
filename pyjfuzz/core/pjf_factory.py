@@ -160,7 +160,10 @@ class PJFFactory(object):
                     elif type(key) == list:
                         arr.append(self.fuzz_elements(key))
                     else:
-                        arr.append(self.mutator.fuzz(key))
+                        if len(self.config.parameters) <= 0:
+                            arr.append(self.mutator.fuzz(key))
+                        else:
+                            arr.append(key)
                 element = arr
                 del arr
         except Exception as e:
