@@ -71,6 +71,12 @@ class TestPJFFactory(unittest.TestCase):
                                                      indent=True, nologo=True)))
         self.assertTrue(json.fuzzed)
 
+    def test_object_parameters(self):
+        json = PJFFactory(PJFConfiguration(Namespace(parameters="d", json={"a": [{"b" : "c"}, "abcd"]}, nologo=True, level=6)))
+        self.assertTrue(json != json.fuzzed)
+        self.assertTrue("abcd" in json.fuzzed)
+
+
 
 def test():
     print("=" * len(__TITLE__))
