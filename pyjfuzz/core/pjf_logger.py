@@ -24,7 +24,7 @@ import sys
 import logging
 
 
-from pjf_version import PYJFUZZ_LOGLEVEL
+from .pjf_version import PYJFUZZ_LOGLEVEL
 
 
 class PJFLogger(object):
