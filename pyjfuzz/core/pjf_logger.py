@@ -19,10 +19,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from .pjf_version import PYJFUZZ_LOGLEVEL
-import logging
-import time
+
 import sys
+import logging
+
+
+from pjf_version import PYJFUZZ_LOGLEVEL
+
 
 class PJFLogger(object):
 
@@ -30,7 +33,8 @@ class PJFLogger(object):
     def init_logger():
         logger = logging.getLogger(__name__)
         logger.setLevel(level=PYJFUZZ_LOGLEVEL)
-        filehandler = logging.FileHandler("pjf_{0}.log".format(time.strftime("%d_%m_%Y")))
-        logger.addHandler(filehandler)
+        streamhandler = logging.StreamHandler()
+        logger.addHandler(streamhandler)
         sys.tracebacklimit = 10
+
         return logger
