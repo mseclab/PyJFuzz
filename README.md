@@ -41,6 +41,13 @@ You can install PyJFuzz with the following command
 git clone https://github.com/mseclab/PyJFuzz.git && cd PyJFuzz && sudo python setup.py install
 ```
 
+Also, you might want to use the `pipenv` tool to setup the environment. 
+
+```
+pipenv install --dev
+
+```
+
 Documentation and Examples
 ==========================
 
