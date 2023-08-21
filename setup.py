@@ -61,7 +61,7 @@ if sys.version_info < (2, 7):
 
 setup(
     name="PyJFuzz",
-    version="1.1.0",
+    version="1.1.1",
     author="Daniele Lingualossa",
     author_email="d.linguaglossa@mseclab.it",
     description="Trivial JSON fuzzer written in python",

@@ -38,6 +38,8 @@ class TestPJFConfiguration(unittest.TestCase):
         parser = argparse.ArgumentParser(description='', formatter_class=argparse.RawTextHelpFormatter)
         parser.add_argument('--J', type=str, default=None)
         parser.add_argument('--no-logo', action='store_true', dest='nologo', default=False, required=False)
+        # This usage case will faile when you invoke the tool directly.
+        # ToDo: Implement a use case when this test his invoked directly.
         parsed = parser.parse_args()
         args = PJFConfiguration(parsed)
         for arg in parsed.__dict__:

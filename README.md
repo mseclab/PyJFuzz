@@ -7,7 +7,7 @@
     <tr>
         <th>Version</th>
         <td>
-           1.1.0
+           1.1.1
         </td>
     </tr>
     <tr>
@@ -39,6 +39,13 @@ In order to work PyJFuzz need some dependency, **bottle**,**netifaces**,**GitPyt
 You can install PyJFuzz with the following command
 ```{r, engine='bash', count_lines}
 git clone https://github.com/mseclab/PyJFuzz.git && cd PyJFuzz && sudo python setup.py install
+```
+
+Also, you might want to use the `pipenv` tool to setup the environment. 
+
+```
+pipenv install --dev
+
 ```
 
 Documentation and Examples

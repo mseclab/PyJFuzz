@@ -31,6 +31,7 @@ __TITLE__ = "Testing PJFExternalFuzzer object"
 
 class TestPJFExternalFuzzer(unittest.TestCase):
 
+    # The assumption that the file 'radamsa' is present needs to be challenged.
     def test_string_mutation(self):
         external_fuzzer = PJFExternalFuzzer(PJFConfiguration(Namespace(nologo=True, command=["radamsa"], stdin=True)))
         mutated = external_fuzzer.execute("MUTATION_EXAMPLE")
@@ -39,11 +40,11 @@ class TestPJFExternalFuzzer(unittest.TestCase):
     def test_file_mutation(self):
         external_fuzzer = PJFExternalFuzzer(PJFConfiguration(Namespace(nologo=True, command=["radamsa","@@"],
                                                                        stdin=False)))
-        with file("test.json", "wb") as json_file:
+        with open("test.json", "w") as json_file:
             json_file.write('{"a": 1}')
             json_file.close()
         external_fuzzer.execute("test.json")
-        with file("test.json", "rb") as json_file:
+        with open("test.json", "r") as json_file:
             content = json_file.read()
             json_file.close()
             self.assertTrue(len(content) > 0)

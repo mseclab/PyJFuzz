@@ -21,10 +21,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from .core.pjf_logger import PJFLogger
-from .core import pjf_configuration
-import argparse
 import time
+import argparse
+
+from core import pjf_configuration
+from core.pjf_logger import PJFLogger
 
 
 def init_logger():

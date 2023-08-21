@@ -25,7 +25,9 @@ from pyjfuzz.core.pjf_configuration import PJFConfiguration
 from argparse import Namespace
 import time
 import unittest
-import urllib2
+
+import requests
+
 
 
 from pyjfuzz.core.pjf_server import PJFServer
@@ -42,15 +44,12 @@ class TestPJFServer(unittest.TestCase):
                                                                     utf8=False, nologo=True)))
         server.run()
         time.sleep(2)
-        json_http = urllib2.urlopen("http://127.0.0.1:8080").read()
-        try:
-            import requests
-            requests.packages.urllib3.disable_warnings()
-            json_https = requests.get('https://127.0.0.1:8443', verify=False).content
-            self.assertTrue(json_https)
-        except ImportError:
-            pass
+        requests.packages.urllib3.disable_warnings()
+
+        json_http = requests.get('http://127.0.0.1:8080').content
+        json_https = requests.get('https://127.0.0.1:8443', verify=False).content
         self.assertTrue(json_http)
+
         server.stop()
 
 
